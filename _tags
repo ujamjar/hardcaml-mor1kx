@@ -1,0 +1,7 @@
+<src/*.{ml,mli}>: package(hardcaml)
+
+<src>: include
+<test>: include
+
+true: debug
+
