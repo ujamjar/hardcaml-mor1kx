@@ -6,33 +6,38 @@ val ra_select : int * int
 val rb_select : int * int
 val imm_width : int
 val imm_select : int * int
-val alu_opc_width : int
-val alu_opc_select : int * int
 
-val alu_opc_add : HardCaml.Signal.Comb.t
-val alu_opc_addc : HardCaml.Signal.Comb.t
-val alu_opc_sub : HardCaml.Signal.Comb.t
-val alu_opc_and : HardCaml.Signal.Comb.t
-val alu_opc_or : HardCaml.Signal.Comb.t
-val alu_opc_xor : HardCaml.Signal.Comb.t
-val alu_opc_mul : HardCaml.Signal.Comb.t
-val alu_opc_resv : HardCaml.Signal.Comb.t
-val alu_opc_shrt : HardCaml.Signal.Comb.t
-val alu_opc_div : HardCaml.Signal.Comb.t
-val alu_opc_divu : HardCaml.Signal.Comb.t
-val alu_opc_mulu : HardCaml.Signal.Comb.t
-val alu_opc_extbh : HardCaml.Signal.Comb.t
-val alu_opc_extw : HardCaml.Signal.Comb.t
-val alu_opc_cmov : HardCaml.Signal.Comb.t
-val alu_opc_ffl1 : HardCaml.Signal.Comb.t
+module Alu_opc : sig
 
-val alu_opc_secondary_width : int
-val alu_opc_secondary_select : int * int
+  val width : int
+  val select : int * int
 
-val alu_opc_secondary_shrt_sll : HardCaml.Signal.Comb.t
-val alu_opc_secondary_shrt_srl : HardCaml.Signal.Comb.t
-val alu_opc_secondary_shrt_sra : HardCaml.Signal.Comb.t
-val alu_opc_secondary_shrt_ror : HardCaml.Signal.Comb.t
+  val add : int
+  val addc : int
+  val sub : int
+  val _and : int
+  val _or : int
+  val xor : int
+  val mul : int
+  val resv : int
+  val shrt : int
+  val div : int
+  val divu : int
+  val mulu : int
+  val extbh : int
+  val extw : int
+  val cmov : int
+  val ffl1 : int
+
+  val secondary_width : int
+  val secondary_select : int * int
+
+  val secondary_shrt_sll : int
+  val secondary_shrt_srl : int
+  val secondary_shrt_sra : int
+  val secondary_shrt_ror : int
+
+end
 
 val comp_opc_width : int
 val comp_opc_select : int * int
@@ -52,72 +57,76 @@ val jumpbranch_immediate_select : int * int
 
 val systrapsync_opc_width : int
 val systrapsync_opc_select : int * int
-val systrapsync_opc_syscall : HardCaml.Signal.Comb.t
-val systrapsync_opc_trap : HardCaml.Signal.Comb.t
-val systrapsync_opc_msync : HardCaml.Signal.Comb.t
-val systrapsync_opc_psync : HardCaml.Signal.Comb.t
-val systrapsync_opc_csync : HardCaml.Signal.Comb.t
+val systrapsync_opc_syscall : int
+val systrapsync_opc_trap : int
+val systrapsync_opc_msync : int
+val systrapsync_opc_psync : int
+val systrapsync_opc_csync : int
 
-val opcode_width : int
-val opcode_select : int * int
+module Opcode : sig
 
-val opcode_j : HardCaml.Signal.Comb.t
-val opcode_jal : HardCaml.Signal.Comb.t
-val opcode_bnf : HardCaml.Signal.Comb.t
-val opcode_bf : HardCaml.Signal.Comb.t
-val opcode_nop : HardCaml.Signal.Comb.t
-val opcode_movhi : HardCaml.Signal.Comb.t
-val opcode_macrc : HardCaml.Signal.Comb.t
+  val width : int
+  val select : int * int
 
-val opcode_systrapsync : HardCaml.Signal.Comb.t
-val opcode_rfe : HardCaml.Signal.Comb.t
+  val j : int
+  val jal : int
+  val bnf : int
+  val bf : int
+  val nop : int
+  val movhi : int
+  val macrc : int
 
-val opcode_jr : HardCaml.Signal.Comb.t
-val opcode_jalr : HardCaml.Signal.Comb.t
-val opcode_maci : HardCaml.Signal.Comb.t
-val opcode_lwa : HardCaml.Signal.Comb.t
-val opcode_cust1 : HardCaml.Signal.Comb.t
-val opcode_cust2 : HardCaml.Signal.Comb.t
-val opcode_cust3 : HardCaml.Signal.Comb.t
-val opcode_cust4 : HardCaml.Signal.Comb.t
+  val systrapsync : int
+  val rfe : int
 
-val opcode_ld : HardCaml.Signal.Comb.t
-val opcode_lwz : HardCaml.Signal.Comb.t
-val opcode_lws : HardCaml.Signal.Comb.t
-val opcode_lbz : HardCaml.Signal.Comb.t
-val opcode_lbs : HardCaml.Signal.Comb.t
-val opcode_lhz : HardCaml.Signal.Comb.t
-val opcode_lhs : HardCaml.Signal.Comb.t
+  val jr : int
+  val jalr : int
+  val maci : int
+  val lwa : int
+  val cust1 : int
+  val cust2 : int
+  val cust3 : int
+  val cust4 : int
 
-val opcode_addi : HardCaml.Signal.Comb.t
-val opcode_addic : HardCaml.Signal.Comb.t
-val opcode_andi : HardCaml.Signal.Comb.t
-val opcode_ori : HardCaml.Signal.Comb.t
-val opcode_xori : HardCaml.Signal.Comb.t
-val opcode_muli : HardCaml.Signal.Comb.t
-val opcode_mfspr : HardCaml.Signal.Comb.t
-val opcode_shrti : HardCaml.Signal.Comb.t
+  val ld : int
+  val lwz : int
+  val lws : int
+  val lbz : int
+  val lbs : int
+  val lhz : int
+  val lhs : int
 
-val opcode_sfimm : HardCaml.Signal.Comb.t
+  val addi : int
+  val addic : int
+  val andi : int
+  val ori : int
+  val xori : int
+  val muli : int
+  val mfspr : int
+  val shrti : int
 
-val opcode_mtspr : HardCaml.Signal.Comb.t
-val opcode_mac : HardCaml.Signal.Comb.t
-val opcode_msb : HardCaml.Signal.Comb.t
+  val sfimm : int
 
-val opcode_swa : HardCaml.Signal.Comb.t
-val opcode_sd : HardCaml.Signal.Comb.t
-val opcode_sw : HardCaml.Signal.Comb.t
-val opcode_sb : HardCaml.Signal.Comb.t
-val opcode_sh : HardCaml.Signal.Comb.t
+  val mtspr : int
+  val mac : int
+  val msb : int
 
-val opcode_alu : HardCaml.Signal.Comb.t
+  val swa : int
+  val sd : int
+  val sw : int
+  val sb : int
+  val sh : int
 
-val opcode_sf : HardCaml.Signal.Comb.t
+  val alu : int
 
-val opcode_cust5 : HardCaml.Signal.Comb.t
-val opcode_cust6 : HardCaml.Signal.Comb.t
-val opcode_cust7 : HardCaml.Signal.Comb.t
-val opcode_cust8 : HardCaml.Signal.Comb.t
+  val sf : int
+
+  val cust5 : int
+  val cust6 : int
+  val cust7 : int
+  val cust8 : int
+
+end
 
 val reset_vector : HardCaml.Signal.Comb.t
 val berr_vector : HardCaml.Signal.Comb.t

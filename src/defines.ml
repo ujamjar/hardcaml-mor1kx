@@ -8,33 +8,38 @@ let ra_select = 20,16
 let rb_select = 15,11
 let imm_width = 16
 let imm_select = 15,0
-let alu_opc_width = 4
-let alu_opc_select = 3,0
 
-let alu_opc_add    = consti alu_opc_width 0x0
-let alu_opc_addc   = consti alu_opc_width 0x1
-let alu_opc_sub    = consti alu_opc_width 0x2
-let alu_opc_and    = consti alu_opc_width 0x3
-let alu_opc_or     = consti alu_opc_width 0x4
-let alu_opc_xor    = consti alu_opc_width 0x5
-let alu_opc_mul    = consti alu_opc_width 0x6
-let alu_opc_resv   = consti alu_opc_width 0x7
-let alu_opc_shrt   = consti alu_opc_width 0x8
-let alu_opc_div    = consti alu_opc_width 0x9
-let alu_opc_divu   = consti alu_opc_width 0xa
-let alu_opc_mulu   = consti alu_opc_width 0xb
-let alu_opc_extbh  = consti alu_opc_width 0xc
-let alu_opc_extw   = consti alu_opc_width 0xd
-let alu_opc_cmov   = consti alu_opc_width 0xe
-let alu_opc_ffl1   = consti alu_opc_width 0xf
+module Alu_opc = struct
 
-let alu_opc_secondary_width = 3
-let alu_opc_secondary_select = 8,6
+  let width = 4
+  let select = 3,0
 
-let alu_opc_secondary_shrt_sll = consti alu_opc_secondary_width 0x0
-let alu_opc_secondary_shrt_srl = consti alu_opc_secondary_width 0x1
-let alu_opc_secondary_shrt_sra = consti alu_opc_secondary_width 0x2
-let alu_opc_secondary_shrt_ror = consti alu_opc_secondary_width 0x3
+  let add    = 0x0
+  let addc   = 0x1
+  let sub    = 0x2
+  let _and    = 0x3
+  let _or     = 0x4
+  let xor    = 0x5
+  let mul    = 0x6
+  let resv   = 0x7
+  let shrt   = 0x8
+  let div    = 0x9
+  let divu   = 0xa
+  let mulu   = 0xb
+  let extbh  = 0xc
+  let extw   = 0xd
+  let cmov   = 0xe
+  let ffl1   = 0xf
+
+  let secondary_width = 3
+  let secondary_select = 8,6
+
+  let secondary_shrt_sll = 0x0
+  let secondary_shrt_srl = 0x1
+  let secondary_shrt_sra = 0x2
+  let secondary_shrt_ror = 0x3
+
+end
 
 let comp_opc_width = 4
 let comp_opc_select = 24,21
@@ -53,75 +58,76 @@ let jumpbranch_immediate_select = 25,0
 
 let systrapsync_opc_width = 3
 let systrapsync_opc_select = 25,23
-let systrapsync_opc_syscall = consti systrapsync_opc_width 0x0
-let systrapsync_opc_trap = consti systrapsync_opc_width 0x2
-let systrapsync_opc_msync = consti systrapsync_opc_width 0x4
-let systrapsync_opc_psync = consti systrapsync_opc_width 0x5
-let systrapsync_opc_csync = consti systrapsync_opc_width 0x6
+let systrapsync_opc_syscall = 0x0
+let systrapsync_opc_trap    = 0x2
+let systrapsync_opc_msync   = 0x4
+let systrapsync_opc_psync   = 0x5
+let systrapsync_opc_csync   = 0x6
 
-let opcode_width = 6
-let opcode_select = 31,26
+module Opcode = struct
 
-let opcode_j       = consti 6 0x0
-let opcode_jal     = consti 6 0x1
-let opcode_bnf     = consti 6 0x3
-let opcode_bf      = consti 6 0x4
-let opcode_nop     = consti 6 0x5
-let opcode_movhi   = consti 6 0x6
-let opcode_macrc   = consti 6 0x6
+  let width = 6
+  let select = 31,26
 
-let opcode_systrapsync = consti 6 0x8
-let opcode_rfe         = consti 6 0x9
+  let j       = 0x0
+  let jal     = 0x1
+  let bnf     = 0x3
+  let bf      = 0x4
+  let nop     = 0x5
+  let movhi   = 0x6
+  let macrc   = 0x6
 
-let opcode_jr      = consti 6 0x11
-let opcode_jalr    = consti 6 0x12
-let opcode_maci    = consti 6 0x13
-let opcode_lwa     = consti 6 0x1b
-let opcode_cust1   = consti 6 0x1c
-let opcode_cust2   = consti 6 0x1d
-let opcode_cust3   = consti 6 0x1e
-let opcode_cust4   = consti 6 0x1f
+  let systrapsync = 0x8
+  let rfe         = 0x9
 
-let opcode_ld      = consti 6 0x20
-let opcode_lwz     = consti 6 0x21
-let opcode_lws     = consti 6 0x22
-let opcode_lbz     = consti 6 0x23
-let opcode_lbs     = consti 6 0x24
-let opcode_lhz     = consti 6 0x25
-let opcode_lhs     = consti 6 0x26
+  let jr      = 0x11
+  let jalr    = 0x12
+  let maci    = 0x13
+  let lwa     = 0x1b
+  let cust1   = 0x1c
+  let cust2   = 0x1d
+  let cust3   = 0x1e
+  let cust4   = 0x1f
 
-let opcode_addi    = consti 6 0x27
-let opcode_addic   = consti 6 0x28
-let opcode_andi    = consti 6 0x29
-let opcode_ori     = consti 6 0x2a
-let opcode_xori    = consti 6 0x2b
-let opcode_muli    = consti 6 0x2c
-let opcode_mfspr   = consti 6 0x2d
-let opcode_shrti   = consti 6 0x2e
+  let ld      = 0x20
+  let lwz     = 0x21
+  let lws     = 0x22
+  let lbz     = 0x23
+  let lbs     = 0x24
+  let lhz     = 0x25
+  let lhs     = 0x26
 
-let opcode_sfimm   = consti 6 0x2f
+  let addi    = 0x27
+  let addic   = 0x28
+  let andi    = 0x29
+  let ori     = 0x2a
+  let xori    = 0x2b
+  let muli    = 0x2c
+  let mfspr   = 0x2d
+  let shrti   = 0x2e
 
-let opcode_mtspr   = consti 6 0x30
-let opcode_mac     = consti 6 0x31
-let opcode_msb     = consti 6 0x31
+  let sfimm   = 0x2f
 
-let opcode_swa     = consti 6 0x33
-let opcode_sd      = consti 6 0x34
-let opcode_sw      = consti 6 0x35
-let opcode_sb      = consti 6 0x36
-let opcode_sh      = consti 6 0x37
+  let mtspr   = 0x30
+  let mac     = 0x31
+  let msb     = 0x31
 
-let opcode_alu     = consti 6 0x38
+  let swa     = 0x33
+  let sd      = 0x34
+  let sw      = 0x35
+  let sb      = 0x36
+  let sh      = 0x37
 
-let opcode_sf      = consti 6 0x39
+  let alu     = 0x38
 
-let opcode_cust5   = consti 6 0x3c
-let opcode_cust6   = consti 6 0x3d
-let opcode_cust7   = consti 6 0x3e
-let opcode_cust8   = consti 6 0x3f
+  let sf      = 0x39
 
-(* OR1K SPR defines *)
-(*`INCLUDE "MOR1KX-SPRS.V"*)
+  let cust5   = 0x3c
+  let cust6   = 0x3d
+  let cust7   = 0x3e
+  let cust8   = 0x3f
+
+end
 
 (* Exception addresses *)
 let reset_vector    = consti 5 0x01

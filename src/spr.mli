@@ -2,286 +2,286 @@ val base : int -> int
 val offset : int -> int
 
 (* Addresses *)
-val spr_sys_base : HardCaml.Signal.Comb.t
-val spr_vr_addr : HardCaml.Signal.Comb.t
-val spr_upr_addr : HardCaml.Signal.Comb.t
-val spr_cpucfgr_addr : HardCaml.Signal.Comb.t
-val spr_dmmucfgr_addr : HardCaml.Signal.Comb.t
-val spr_immucfgr_addr : HardCaml.Signal.Comb.t
-val spr_dccfgr_addr : HardCaml.Signal.Comb.t
-val spr_iccfgr_addr : HardCaml.Signal.Comb.t
-val spr_dcfgr_addr : HardCaml.Signal.Comb.t
-val spr_pccfgr_addr : HardCaml.Signal.Comb.t
-val spr_vr2_addr : HardCaml.Signal.Comb.t
-val spr_avr_addr : HardCaml.Signal.Comb.t
-val spr_evbar_addr : HardCaml.Signal.Comb.t
-val spr_aecr_addr : HardCaml.Signal.Comb.t
-val spr_aesr_addr : HardCaml.Signal.Comb.t
-val spr_npc_addr : HardCaml.Signal.Comb.t
-val spr_sr_addr : HardCaml.Signal.Comb.t
-val spr_ppc_addr : HardCaml.Signal.Comb.t
-val spr_fpcsr_addr : HardCaml.Signal.Comb.t
-val spr_isr0_addr : HardCaml.Signal.Comb.t
-val spr_epcr0_addr : HardCaml.Signal.Comb.t
-val spr_eear0_addr : HardCaml.Signal.Comb.t
-val spr_esr0_addr : HardCaml.Signal.Comb.t
-val spr_coreid_addr : HardCaml.Signal.Comb.t
-val spr_numcores_addr : HardCaml.Signal.Comb.t
-val spr_gpr0_addr : HardCaml.Signal.Comb.t
+val sys_base : HardCaml.Signal.Comb.t
+val vr_addr : HardCaml.Signal.Comb.t
+val upr_addr : HardCaml.Signal.Comb.t
+val cpucfgr_addr : HardCaml.Signal.Comb.t
+val dmmucfgr_addr : HardCaml.Signal.Comb.t
+val immucfgr_addr : HardCaml.Signal.Comb.t
+val dccfgr_addr : HardCaml.Signal.Comb.t
+val iccfgr_addr : HardCaml.Signal.Comb.t
+val dcfgr_addr : HardCaml.Signal.Comb.t
+val pccfgr_addr : HardCaml.Signal.Comb.t
+val vr2_addr : HardCaml.Signal.Comb.t
+val avr_addr : HardCaml.Signal.Comb.t
+val evbar_addr : HardCaml.Signal.Comb.t
+val aecr_addr : HardCaml.Signal.Comb.t
+val aesr_addr : HardCaml.Signal.Comb.t
+val npc_addr : HardCaml.Signal.Comb.t
+val sr_addr : HardCaml.Signal.Comb.t
+val ppc_addr : HardCaml.Signal.Comb.t
+val fpcsr_addr : HardCaml.Signal.Comb.t
+val isr0_addr : HardCaml.Signal.Comb.t
+val epcr0_addr : HardCaml.Signal.Comb.t
+val eear0_addr : HardCaml.Signal.Comb.t
+val esr0_addr : HardCaml.Signal.Comb.t
+val coreid_addr : HardCaml.Signal.Comb.t
+val numcores_addr : HardCaml.Signal.Comb.t
+val gpr0_addr : HardCaml.Signal.Comb.t
 
-val spr_dmmu_base : HardCaml.Signal.Comb.t
-val spr_dmmucr_addr : HardCaml.Signal.Comb.t
-val spr_dmmupr_addr : HardCaml.Signal.Comb.t
-val spr_dtlbeir_addr : HardCaml.Signal.Comb.t
-val spr_datbmr0_addr : HardCaml.Signal.Comb.t
-val spr_datbtr0_addr : HardCaml.Signal.Comb.t
-val spr_dtlbw0mr0_addr : HardCaml.Signal.Comb.t
-val spr_dtlbw0tr0_addr : HardCaml.Signal.Comb.t
-val spr_dtlbw1mr0_addr : HardCaml.Signal.Comb.t
-val spr_dtlbw1tr0_addr : HardCaml.Signal.Comb.t
-val spr_dtlbw2mr0_addr : HardCaml.Signal.Comb.t
-val spr_dtlbw2tr0_addr : HardCaml.Signal.Comb.t
-val spr_dtlbw3mr0_addr : HardCaml.Signal.Comb.t
-val spr_dtlbw3tr0_addr : HardCaml.Signal.Comb.t
+val dmmu_base : HardCaml.Signal.Comb.t
+val dmmucr_addr : HardCaml.Signal.Comb.t
+val dmmupr_addr : HardCaml.Signal.Comb.t
+val dtlbeir_addr : HardCaml.Signal.Comb.t
+val datbmr0_addr : HardCaml.Signal.Comb.t
+val datbtr0_addr : HardCaml.Signal.Comb.t
+val dtlbw0mr0_addr : HardCaml.Signal.Comb.t
+val dtlbw0tr0_addr : HardCaml.Signal.Comb.t
+val dtlbw1mr0_addr : HardCaml.Signal.Comb.t
+val dtlbw1tr0_addr : HardCaml.Signal.Comb.t
+val dtlbw2mr0_addr : HardCaml.Signal.Comb.t
+val dtlbw2tr0_addr : HardCaml.Signal.Comb.t
+val dtlbw3mr0_addr : HardCaml.Signal.Comb.t
+val dtlbw3tr0_addr : HardCaml.Signal.Comb.t
 
-val spr_immu_base : HardCaml.Signal.Comb.t
-val spr_immucr_addr : HardCaml.Signal.Comb.t
-val spr_immupr_addr : HardCaml.Signal.Comb.t
-val spr_itlbeir_addr : HardCaml.Signal.Comb.t
-val spr_iatbmr0_addr : HardCaml.Signal.Comb.t
-val spr_iatbtr0_addr : HardCaml.Signal.Comb.t
-val spr_itlbw0mr0_addr : HardCaml.Signal.Comb.t
-val spr_itlbw0tr0_addr : HardCaml.Signal.Comb.t
-val spr_itlbw1mr0_addr : HardCaml.Signal.Comb.t
-val spr_itlbw1tr0_addr : HardCaml.Signal.Comb.t
-val spr_itlbw2mr0_addr : HardCaml.Signal.Comb.t
-val spr_itlbw2tr0_addr : HardCaml.Signal.Comb.t
-val spr_itlbw3mr0_addr : HardCaml.Signal.Comb.t
-val spr_itlbw3tr0_addr : HardCaml.Signal.Comb.t
+val immu_base : HardCaml.Signal.Comb.t
+val immucr_addr : HardCaml.Signal.Comb.t
+val immupr_addr : HardCaml.Signal.Comb.t
+val itlbeir_addr : HardCaml.Signal.Comb.t
+val iatbmr0_addr : HardCaml.Signal.Comb.t
+val iatbtr0_addr : HardCaml.Signal.Comb.t
+val itlbw0mr0_addr : HardCaml.Signal.Comb.t
+val itlbw0tr0_addr : HardCaml.Signal.Comb.t
+val itlbw1mr0_addr : HardCaml.Signal.Comb.t
+val itlbw1tr0_addr : HardCaml.Signal.Comb.t
+val itlbw2mr0_addr : HardCaml.Signal.Comb.t
+val itlbw2tr0_addr : HardCaml.Signal.Comb.t
+val itlbw3mr0_addr : HardCaml.Signal.Comb.t
+val itlbw3tr0_addr : HardCaml.Signal.Comb.t
 
-val spr_dc_base : HardCaml.Signal.Comb.t
-val spr_dccr_addr : HardCaml.Signal.Comb.t
-val spr_dcbpr_addr : HardCaml.Signal.Comb.t
-val spr_dcbfr_addr : HardCaml.Signal.Comb.t
-val spr_dcbir_addr : HardCaml.Signal.Comb.t
-val spr_dcbwr_addr : HardCaml.Signal.Comb.t
-val spr_dcblr_addr : HardCaml.Signal.Comb.t
+val dc_base : HardCaml.Signal.Comb.t
+val dccr_addr : HardCaml.Signal.Comb.t
+val dcbpr_addr : HardCaml.Signal.Comb.t
+val dcbfr_addr : HardCaml.Signal.Comb.t
+val dcbir_addr : HardCaml.Signal.Comb.t
+val dcbwr_addr : HardCaml.Signal.Comb.t
+val dcblr_addr : HardCaml.Signal.Comb.t
 
-val spr_ic_base : HardCaml.Signal.Comb.t
-val spr_iccr_addr : HardCaml.Signal.Comb.t
-val spr_icbpr_addr : HardCaml.Signal.Comb.t
-val spr_icbir_addr : HardCaml.Signal.Comb.t
-val spr_icblr_addr : HardCaml.Signal.Comb.t
+val ic_base : HardCaml.Signal.Comb.t
+val iccr_addr : HardCaml.Signal.Comb.t
+val icbpr_addr : HardCaml.Signal.Comb.t
+val icbir_addr : HardCaml.Signal.Comb.t
+val icblr_addr : HardCaml.Signal.Comb.t
 
-val spr_mac_base : HardCaml.Signal.Comb.t
-val spr_maclo_addr : HardCaml.Signal.Comb.t
-val spr_machi_addr : HardCaml.Signal.Comb.t
+val mac_base : HardCaml.Signal.Comb.t
+val maclo_addr : HardCaml.Signal.Comb.t
+val machi_addr : HardCaml.Signal.Comb.t
 
-val spr_du_base : HardCaml.Signal.Comb.t
-val spr_dvr0_addr : HardCaml.Signal.Comb.t
-val spr_dcr0_addr : HardCaml.Signal.Comb.t
-val spr_dmr1_addr : HardCaml.Signal.Comb.t
-val spr_dmr2_addr : HardCaml.Signal.Comb.t
-val spr_dcwr0_addr : HardCaml.Signal.Comb.t
-val spr_dsr_addr : HardCaml.Signal.Comb.t
-val spr_drr_addr : HardCaml.Signal.Comb.t
+val du_base : HardCaml.Signal.Comb.t
+val dvr0_addr : HardCaml.Signal.Comb.t
+val dcr0_addr : HardCaml.Signal.Comb.t
+val dmr1_addr : HardCaml.Signal.Comb.t
+val dmr2_addr : HardCaml.Signal.Comb.t
+val dcwr0_addr : HardCaml.Signal.Comb.t
+val dsr_addr : HardCaml.Signal.Comb.t
+val drr_addr : HardCaml.Signal.Comb.t
 
-val spr_pc_base : HardCaml.Signal.Comb.t
-val spr_pccr0_addr : HardCaml.Signal.Comb.t
-val spr_pcmr0_addr : HardCaml.Signal.Comb.t
+val pc_base : HardCaml.Signal.Comb.t
+val pccr0_addr : HardCaml.Signal.Comb.t
+val pcmr0_addr : HardCaml.Signal.Comb.t
 
-val spr_pm_base : HardCaml.Signal.Comb.t
-val spr_pmr_addr : HardCaml.Signal.Comb.t
+val pm_base : HardCaml.Signal.Comb.t
+val pmr_addr : HardCaml.Signal.Comb.t
 
-val spr_pic_base : HardCaml.Signal.Comb.t
-val spr_picmr_addr : HardCaml.Signal.Comb.t
-val spr_picsr_addr : HardCaml.Signal.Comb.t
+val pic_base : HardCaml.Signal.Comb.t
+val picmr_addr : HardCaml.Signal.Comb.t
+val picsr_addr : HardCaml.Signal.Comb.t
 
-val spr_tt_base : HardCaml.Signal.Comb.t
-val spr_ttmr_addr : HardCaml.Signal.Comb.t
-val spr_ttcr_addr : HardCaml.Signal.Comb.t
+val tt_base : HardCaml.Signal.Comb.t
+val ttmr_addr : HardCaml.Signal.Comb.t
+val ttcr_addr : HardCaml.Signal.Comb.t
 
-val spr_fpu_base : HardCaml.Signal.Comb.t
+val fpu_base : HardCaml.Signal.Comb.t
 
 (* Register bit defines *)
 
 (* Supervision Register *)
-val spr_sr_sm : int
-val spr_sr_tee : int
-val spr_sr_iee : int
-val spr_sr_dce : int
-val spr_sr_ice : int
-val spr_sr_dme : int
-val spr_sr_ime : int
-val spr_sr_lee : int
-val spr_sr_ce : int
-val spr_sr_f : int
-val spr_sr_cy : int
-val spr_sr_ov : int
-val spr_sr_ove : int
-val spr_sr_dsx : int
-val spr_sr_eph : int
-val spr_sr_fo : int
-val spr_sr_sumra : int
-val spr_sr_reserved : int * int
-val spr_sr_cid : int * int
+val sr_sm : int
+val sr_tee : int
+val sr_iee : int
+val sr_dce : int
+val sr_ice : int
+val sr_dme : int
+val sr_ime : int
+val sr_lee : int
+val sr_ce : int
+val sr_f : int
+val sr_cy : int
+val sr_ov : int
+val sr_ove : int
+val sr_dsx : int
+val sr_eph : int
+val sr_fo : int
+val sr_sumra : int
+val sr_reserved : int * int
+val sr_cid : int * int
 
 (* Version register - DEPRECATED *)
-val spr_vr_rev : int * int
-val spr_vr_uvrp : int
-val spr_vr_reserved : int * int
-val spr_vr_cfg : int * int
-val spr_vr_ver : int * int
+val vr_rev : int * int
+val vr_uvrp : int
+val vr_reserved : int * int
+val vr_cfg : int * int
+val vr_ver : int * int
 
 (* Unit Present register *)
-val spr_upr_up : int
-val spr_upr_dcp : int
-val spr_upr_icp : int
-val spr_upr_dmp : int
-val spr_upr_imp : int
-val spr_upr_mp : int
-val spr_upr_dup : int
-val spr_upr_pcup : int
-val spr_upr_picp : int
-val spr_upr_pmp : int
-val spr_upr_ttp : int
-val spr_upr_reserved : int * int
-val spr_upr_cup : int * int
+val upr_up : int
+val upr_dcp : int
+val upr_icp : int
+val upr_dmp : int
+val upr_imp : int
+val upr_mp : int
+val upr_dup : int
+val upr_pcup : int
+val upr_picp : int
+val upr_pmp : int
+val upr_ttp : int
+val upr_reserved : int * int
+val upr_cup : int * int
 
 (* CPU Configuration register *)
-val spr_cpucfgr_nsgf : int * int
-val spr_cpucfgr_cfg : int
-val spr_cpucfgr_ob32s : int
-val spr_cpucfgr_ob64s : int
-val spr_cpucfgr_of32s : int
-val spr_cpucfgr_of64s : int
-val spr_cpucfgr_ov64s : int
-val spr_cpucfgr_nd : int
-val spr_cpucfgr_avrp : int
-val spr_cpucfgr_evbarp : int
-val spr_cpucfgr_isrp : int
-val spr_cpucfgr_aecsrp : int
-val spr_cpucfgr_reserved : int * int
+val cpucfgr_nsgf : int * int
+val cpucfgr_cfg : int
+val cpucfgr_ob32s : int
+val cpucfgr_ob64s : int
+val cpucfgr_of32s : int
+val cpucfgr_of64s : int
+val cpucfgr_ov64s : int
+val cpucfgr_nd : int
+val cpucfgr_avrp : int
+val cpucfgr_evbarp : int
+val cpucfgr_isrp : int
+val cpucfgr_aecsrp : int
+val cpucfgr_reserved : int * int
 
 (* Version register 2 (new with OR1K 1.0) *)
-val spr_vr2_ver : int * int
-val spr_vr2_cpuid : int * int
+val vr2_ver : int * int
+val vr2_cpuid : int * int
 
 (* Architecture Version register *)
-val spr_avr_reserved : int * int
-val spr_avr_rev : int * int
-val spr_avr_min : int * int
-val spr_avr_maj : int * int
+val avr_reserved : int * int
+val avr_rev : int * int
+val avr_min : int * int
+val avr_maj : int * int
 
 (* Exception Vector Base Address register *)
-val spr_evbar_reserved : int * int
-val spr_evbar_evba : int * int
+val evbar_reserved : int * int
+val evbar_evba : int * int
 
 (* Arithmetic Exception Control register *)
-val spr_aecr_cyadde : int
-val spr_aecr_ovadde : int
-val spr_aecr_cymule : int
-val spr_aecr_ovmule : int
-val spr_aecr_dbze : int
-val spr_aecr_cymacadde : int
-val spr_aecr_ovmacadde : int
-val spr_aecr_reserved : int * int
+val aecr_cyadde : int
+val aecr_ovadde : int
+val aecr_cymule : int
+val aecr_ovmule : int
+val aecr_dbze : int
+val aecr_cymacadde : int
+val aecr_ovmacadde : int
+val aecr_reserved : int * int
 
 (* Arithmetic Exception Status register *)
-val spr_aesr_cyadde : int
-val spr_aesr_ovadde : int
-val spr_aesr_cymule : int
-val spr_aesr_ovmule : int
-val spr_aesr_dbze : int
-val spr_aesr_cymacadde : int
-val spr_aesr_ovmacadde : int
-val spr_aesr_reserved : int * int
+val aesr_cyadde : int
+val aesr_ovadde : int
+val aesr_cymule : int
+val aesr_ovmule : int
+val aesr_dbze : int
+val aesr_cymacadde : int
+val aesr_ovmacadde : int
+val aesr_reserved : int * int
 
 (* Tick timer registers *)
-val spr_ttmr_tp : int * int
-val spr_ttmr_ip : int
-val spr_ttmr_ie : int
-val spr_ttmr_m : int * int
+val ttmr_tp : int * int
+val ttmr_ip : int
+val ttmr_ie : int
+val ttmr_m : int * int
 
 (* Tick timer mode values *)
-val spr_ttmr_m_dis : int
-val spr_ttmr_m_rst : int
-val spr_ttmr_m_stp : int
-val spr_ttmr_m_cnt : int
+val ttmr_m_dis : int
+val ttmr_m_rst : int
+val ttmr_m_stp : int
+val ttmr_m_cnt : int
 
 (* Data Cache Configuration register *)
-val spr_dccfgr_ncw : int * int
-val spr_dccfgr_ncs : int * int
-val spr_dccfgr_cbs : int
-val spr_dccfgr_cws : int
-val spr_dccfgr_ccri : int
-val spr_dccfgr_cbiri : int
-val spr_dccfgr_cbpri : int
-val spr_dccfgr_cblri : int
-val spr_dccfgr_cbfri : int
-val spr_dccfgr_cbwbri : int
+val dccfgr_ncw : int * int
+val dccfgr_ncs : int * int
+val dccfgr_cbs : int
+val dccfgr_cws : int
+val dccfgr_ccri : int
+val dccfgr_cbiri : int
+val dccfgr_cbpri : int
+val dccfgr_cblri : int
+val dccfgr_cbfri : int
+val dccfgr_cbwbri : int
 
 (* Instruction Cache Configuration register *)
-val spr_iccfgr_ncw : int * int
-val spr_iccfgr_ncs : int * int
-val spr_iccfgr_cbs : int
-val spr_iccfgr_ccri : int
-val spr_iccfgr_cbiri : int
-val spr_iccfgr_cbpri : int
-val spr_iccfgr_cblri : int
+val iccfgr_ncw : int * int
+val iccfgr_ncs : int * int
+val iccfgr_cbs : int
+val iccfgr_ccri : int
+val iccfgr_cbiri : int
+val iccfgr_cbpri : int
+val iccfgr_cblri : int
 
 (* Data MMU Configuration register *)
-val spr_dmmufgr_ntw : int * int
-val spr_dmmufgr_nts : int * int
-val spr_dmmufgr_nae : int * int
-val spr_dmmufgr_cri : int
-val spr_dmmufgr_pri : int
-val spr_dmmufgr_teiri : int
-val spr_dmmufgr_htr : int
+val dmmufgr_ntw : int * int
+val dmmufgr_nts : int * int
+val dmmufgr_nae : int * int
+val dmmufgr_cri : int
+val dmmufgr_pri : int
+val dmmufgr_teiri : int
+val dmmufgr_htr : int
 
 (* Instruction MMU Configuration register *)
-val spr_immufgr_ntw : int * int
-val spr_immufgr_nts : int * int
-val spr_immufgr_nae : int * int
-val spr_immufgr_cri : int
-val spr_immufgr_pri : int
-val spr_immufgr_teiri : int
-val spr_immufgr_htr : int
+val immufgr_ntw : int * int
+val immufgr_nts : int * int
+val immufgr_nae : int * int
+val immufgr_cri : int
+val immufgr_pri : int
+val immufgr_teiri : int
+val immufgr_htr : int
 
 (* Debug Mode Register 1 *)
-val spr_dmr1_st : int
-val spr_dmr1_bt : int
+val dmr1_st : int
+val dmr1_bt : int
 
 (* Debug Stop Register *)
-val spr_dsr_rste : int
-val spr_dsr_busee : int
-val spr_dsr_dpfe : int
-val spr_dsr_ipfe : int
-val spr_dsr_tte : int
-val spr_dsr_ae : int
-val spr_dsr_iie : int
-val spr_dsr_inte : int
-val spr_dsr_dme : int
-val spr_dsr_ime : int
-val spr_dsr_re : int
-val spr_dsr_sce : int
-val spr_dsr_fpe : int
-val spr_dsr_te : int
-val spr_drr_rste : int
-val spr_drr_busee : int
-val spr_drr_dpfe : int
-val spr_drr_ipfe : int
-val spr_drr_tte : int
-val spr_drr_ae : int
-val spr_drr_iie : int
-val spr_drr_ie : int
-val spr_drr_dme : int
-val spr_drr_ime : int
-val spr_drr_re : int
-val spr_drr_sce : int
-val spr_drr_fpe : int
-val spr_drr_te : int
+val dsr_rste : int
+val dsr_busee : int
+val dsr_dpfe : int
+val dsr_ipfe : int
+val dsr_tte : int
+val dsr_ae : int
+val dsr_iie : int
+val dsr_inte : int
+val dsr_dme : int
+val dsr_ime : int
+val dsr_re : int
+val dsr_sce : int
+val dsr_fpe : int
+val dsr_te : int
+val drr_rste : int
+val drr_busee : int
+val drr_dpfe : int
+val drr_ipfe : int
+val drr_tte : int
+val drr_ae : int
+val drr_iie : int
+val drr_ie : int
+val drr_dme : int
+val drr_ime : int
+val drr_re : int
+val drr_sce : int
+val drr_fpe : int
+val drr_te : int
 
 (* Implementation-specific SPR defines *)
-val mor1kx_spr_sr_width : int
-val mor1kx_spr_sr_reset_value : HardCaml.Signal.Comb.t
+val mor1kx_sr_width : int
+val mor1kx_sr_reset_value : HardCaml.Signal.Comb.t

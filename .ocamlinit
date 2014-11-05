@@ -1,0 +1,4 @@
+#directory "_build/src";;
+#require "hardcaml,deriving";;
+#load "openrisc.cma";;
+

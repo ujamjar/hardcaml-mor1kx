@@ -1,4 +1,7 @@
-<src/*.{ml,mli}>: package(hardcaml)
+<src/*.{ml,mli}>: syntax(camlp4o), package(hardcaml,hardcaml.syntax,deriving)
+<test/*.{ml,mli}>: syntax(camlp4o), package(hardcaml,hardcaml.syntax,deriving)
+
+<test/*.byte>: package(hardcaml,deriving)
 
 <src>: include
 <test>: include
