@@ -7,6 +7,29 @@ type spr_part =
 
 val mk_spr : string -> spr_part list -> HardCaml.Signal.Comb.t
 
+module Multiram : sig
+  open HardCaml.Signal.Types
+  open HardCaml.Signal.Comb
+
+  type 'a write = 
+      {
+          we : 'a;
+          wd : 'a;
+          wa : 'a;
+      }
+  type 'a read = 
+      {
+          re : 'a;
+          ra : 'a;
+      }
+
+  type ram = size:int -> we:t -> wa:t -> d:t -> re:t -> ra:t -> t
+
+  val ram : ?priority_write:bool -> ram:ram -> size:int -> spec:register -> 
+      wr:t write array -> rd:t read array -> t array
+
+end
+
 module type Spec = sig
     val reg_spec : HardCaml.Signal.Types.register
     val ram_spec : HardCaml.Signal.Types.register
@@ -81,6 +104,16 @@ module type S = sig
         ?c:signal -> ?cl:signal -> ?cv:signal ->
         ?ge:signal ->
         int -> we:signal -> wa:signal -> d:signal -> re:signal -> ra:signal -> signal
+
+    val multi_ram_wbr : ?priority_write:bool -> 
+      rd:HardCaml.Signal.Comb.t Multiram.read array ->
+      wr:HardCaml.Signal.Comb.t Multiram.write array ->
+      int -> HardCaml.Signal.Comb.t array
+
+    val multi_ram_rbw : ?priority_write:bool -> 
+      rd:HardCaml.Signal.Comb.t Multiram.read array ->
+      wr:HardCaml.Signal.Comb.t Multiram.write array ->
+      int -> HardCaml.Signal.Comb.t array
 
 end
 

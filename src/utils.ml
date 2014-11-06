@@ -34,6 +34,89 @@ let mk_spr n l =
   in
   uresize (f 0 l) 32
 
+module Multiram = struct
+  (* XXX can't remember if I tested this properly... *)
+
+  let rec bin2oh s = 
+    let (&::) a b = repeat a (width b) &: b in
+    if width s = 1 then s @: ~: s 
+    else 
+        ((((msb s)) &:: bin2oh (lsbs s)) @: 
+      ((~: (msb s)) &:: bin2oh (lsbs s)))
+
+
+  let rec oh2bin s = 
+    let pairs s = 
+      let s = if width s mod 2 = 0 then s else gnd @: s in
+      let b = List.rev (bits s) in
+      HardCaml.Utils.zip (HardCaml.Utils.leven b) (HardCaml.Utils.lodd b)
+    in
+    let enc2_1 (a, b) = (b, a |: b) in
+    if width s = 1 then gnd
+    else if width s = 2 then bit s 1
+    else
+      let s, p = HardCaml.Utils.unzip (List.map enc2_1 (pairs s)) in
+      oh2bin (concat (List.rev p)) @: reduce (|:) s
+
+  let rec oh2bin_p s = 
+    let w = width s in
+    let l = HardCaml.Utils.nbits (w-1) in
+    let rec f b i = 
+      match b with
+      | [] -> empty (* shouldnt get here *)
+      | h::[] -> consti l i
+      | h::t -> mux2 h (consti l i) (f t (i+1))
+    in
+    f (List.rev (bits s)) 0
+
+  (* lvt multiport ram *)
+
+  type 'a write = 
+    {
+      we : 'a;
+      wd : 'a;
+      wa : 'a;
+    }
+  type 'a read = 
+    {
+      re : 'a;
+      ra : 'a;
+    }
+  type ram = size:int -> we:t -> wa:t -> d:t -> re:t -> ra:t -> t
+
+  let ram_1wr ~ram ~size ~wr ~rd = 
+    (* 1 write, n read ports *)
+    Array.map 
+      (fun rd ->
+        ram ~size 
+          ~we:wr.we ~wa:wr.wa ~d:wr.wd 
+          ~re:rd.re ~ra:rd.ra) rd
+
+  let lvt ~priority_write ~size ~spec ~wr ~rd = 
+    let n_wr, n_rd = Array.length wr, Array.length rd in
+    let bin2oh we s = Array.map ((&:) we) (Array.of_list (List.rev (bits (bin2oh s)))) in
+    let we1h = Array.map (fun wr -> bin2oh wr.we wr.wa) wr in
+    let regs = Array.init size (fun i -> 
+      let wes = Array.init n_wr (fun j -> we1h.(j).(i)) in
+      let we = reduce (|:) (Array.to_list wes) in
+      let oh2bin = if priority_write then oh2bin_p else oh2bin in
+      let d = oh2bin (concat (List.rev (Array.to_list wes))) in
+      HardCaml.Signal.Seq.reg spec we d)
+    in
+    let regs = Array.to_list regs in
+    Array.map (fun rd -> mux rd.ra regs) rd
+
+  let ram ?(priority_write=false) ~ram ~size ~spec ~wr ~rd = 
+    let n_wr, n_rd = Array.length wr, Array.length rd in
+    let banks = Array.map (fun wr -> ram_1wr ~ram ~size ~wr ~rd) wr in
+    let lvt = lvt ~priority_write ~size ~spec ~wr ~rd in
+    let lvt = Array.init n_rd (fun i -> HardCaml.Signal.Seq.reg spec rd.(i).re lvt.(i)) in
+
+    Array.init n_rd (fun i -> mux lvt.(i) 
+      (Array.to_list (Array.init n_wr (fun j -> banks.(j).(i))))) 
+
+end
+
 module type Spec = sig
     val reg_spec : HardCaml.Signal.Types.register
     val ram_spec : HardCaml.Signal.Types.register
@@ -108,6 +191,16 @@ module type S = sig
         ?c:signal -> ?cl:signal -> ?cv:signal ->
         ?ge:signal ->
         int -> we:signal -> wa:signal -> d:signal -> re:signal -> ra:signal -> signal
+
+    val multi_ram_wbr : ?priority_write:bool -> 
+      rd:HardCaml.Signal.Comb.t Multiram.read array ->
+      wr:HardCaml.Signal.Comb.t Multiram.write array ->
+      int -> HardCaml.Signal.Comb.t array
+
+    val multi_ram_rbw : ?priority_write:bool -> 
+      rd:HardCaml.Signal.Comb.t Multiram.read array ->
+      wr:HardCaml.Signal.Comb.t Multiram.write array ->
+      int -> HardCaml.Signal.Comb.t array
 
 end
 
@@ -211,6 +304,14 @@ module Make_seq(S : Spec) = struct
         size ~we ~wa ~d ~re ~ra =
         let spec = make_spec ?clk ?clkl ?r ?rl ?rv ?c ?cl ?cv ?ge S.ram_spec in
         Signal.Seq.ram_rbw ~size ~spec ~we ~wa ~d ~re ~ra
+
+    let multi_ram_wbr ?priority_write ~rd ~wr size =
+        Multiram.ram ?priority_write ~ram:(Signal.Seq.ram_wbr ~spec:S.ram_spec)
+          ~size ~spec:S.reg_spec ~wr ~rd
+
+    let multi_ram_rbw ?priority_write ~rd ~wr size =
+        Multiram.ram ?priority_write ~ram:(Signal.Seq.ram_rbw ~spec:S.ram_spec)
+          ~size ~spec:S.reg_spec ~wr ~rd
 
 end
 
