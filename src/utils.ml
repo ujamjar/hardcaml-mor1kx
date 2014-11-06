@@ -1,6 +1,6 @@
 open HardCaml.Signal.Comb
 
-type t = 
+type spr_part = 
   | VI of (int * int) * int
   | BI of int * int
   | BB of int * bool
@@ -228,14 +228,14 @@ let drop_bottom x n = select x (width x - 1) n
 let drop_top x n = select x (width x - 1 - n) 0
 let sel_bottom x n = select x (n-1) 0
 let sel_top x n = select x (width x - 1) (width x - n)
-let insert x y n = 
-  let wx, wy = width x, width y in
+let insert ~t ~f n = 
+  let wt, wf = width t, width f in
   if n < 0 then failwith "insert <0"
-  else if wx < (wy + n) then failwith "insert overflow"
-  else if wx = wy && n = 0 then y
-  else if n=0 then select x (wx - 1) wy @: y
-  else if wx = (wy + n) then y @: select x (wx - wy - 1) 0
-  else select x (wx - 1) (wy + n) @: y @: select x (n-1) 0
+  else if wt < (wf + n) then failwith "insert overflow"
+  else if wt = wf && n = 0 then f
+  else if n=0 then select t (wt - 1) wf @: f
+  else if wt = (wf + n) then f @: select t (wt - wf - 1) 0
+  else select t (wt - 1) (wf + n) @: f @: select t (n-1) 0
 
 let sel x (h,l) = select x h l
 
@@ -247,5 +247,11 @@ let cases sel default l =
     mux sel (Array.to_list a)
   else
     mux sel (Array.to_list a @ [default])
+
+(* XXX move to hardcaml *)
+let g_elif c t f = HardCaml.Signal.Guarded.([ g_if c t f ])
+
+let ($==\) (x, l) y = 
+  HardCaml.Signal.Guarded.( x $== insert x#q y l )
 
 

@@ -1,10 +1,11 @@
 
-type t = 
+
+type spr_part = 
   | VI of (int * int) * int
   | BI of int * int
   | BB of int * bool
 
-val mk_spr : string -> t list -> HardCaml.Signal.Comb.t
+val mk_spr : string -> spr_part list -> HardCaml.Signal.Comb.t
 
 module type Spec = sig
     val reg_spec : HardCaml.Signal.Types.register
@@ -94,10 +95,18 @@ val drop_bottom : HardCaml.Signal.Comb.t -> int -> HardCaml.Signal.Comb.t
 val drop_top : HardCaml.Signal.Comb.t -> int -> HardCaml.Signal.Comb.t
 val sel_bottom : HardCaml.Signal.Comb.t -> int -> HardCaml.Signal.Comb.t
 val sel_top : HardCaml.Signal.Comb.t -> int -> HardCaml.Signal.Comb.t
-val insert : HardCaml.Signal.Comb.t -> HardCaml.Signal.Comb.t -> int -> HardCaml.Signal.Comb.t
+val insert : t:HardCaml.Signal.Comb.t -> f:HardCaml.Signal.Comb.t -> int -> HardCaml.Signal.Comb.t
 val sel : HardCaml.Signal.Comb.t -> (int * int) -> HardCaml.Signal.Comb.t
 
 val cases : HardCaml.Signal.Comb.t -> HardCaml.Signal.Comb.t ->
   (int * HardCaml.Signal.Comb.t) list -> HardCaml.Signal.Comb.t
 
+val g_elif : HardCaml.Signal.Comb.t ->
+  HardCaml.Signal.Guarded.statement list ->
+  HardCaml.Signal.Guarded.statement list ->
+  HardCaml.Signal.Guarded.statement list
+
+val ($==\) :
+  HardCaml.Signal.Guarded.variable * int -> 
+  HardCaml.Signal.Types.signal -> HardCaml.Signal.Guarded.statement
 

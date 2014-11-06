@@ -15,7 +15,7 @@ module O = interface
     cpu_err[1] cpu_ack[1] cpu_dat_o[32]
     wbm_adr[32] wbm_stb[1] wbm_cyc[1] wbm_sel[4]
     wbm_we[1] wbm_cti[3] wbm_bte[2] wbm_dat_o[32]
-    undriven[1]
+    redundant[1]
 end
 
 let classic i = 
@@ -34,7 +34,7 @@ let classic i =
     wbm_cti = gnd;
     wbm_bte = gnd;
     wbm_dat_o = i.cpu_dat_i;
-    undriven = List.fold_left (&:) gnd @@ List.map lsb @@ I.to_list i;
+    redundant = List.fold_left (&:) gnd @@ List.map lsb @@ I.to_list i;
   })
 
 let b3_registered_feedback ~burst_len i = 
@@ -56,7 +56,7 @@ let b3_registered_feedback ~burst_len i =
     cpu_err = i.wbm_err;
     cpu_ack = i.wbm_ack;
     cpu_dat_o = i.wbm_dat_i;
-    undriven = List.fold_left (&:) gnd @@ List.map lsb @@ I.to_list i;
+    redundant = List.fold_left (&:) gnd @@ List.map lsb @@ I.to_list i;
   })
 
 let b3_read_bursting ~burst_len i = 
@@ -123,7 +123,7 @@ let b3_read_bursting ~burst_len i =
     cpu_err = i.wbm_err;
     cpu_ack = i.wbm_ack &: (~: (bursting &: address_differs)) &: i.cpu_req;
     cpu_dat_o = mux2 i.wbm_err (zero 32) i.wbm_dat_i;
-    undriven = List.fold_left (&:) gnd @@ List.map lsb @@ I.to_list i;
+    redundant = List.fold_left (&:) gnd @@ List.map lsb @@ I.to_list i;
   })
 
 let wishbone ~bus_type ~burst_len i = 

@@ -13,7 +13,7 @@ module O : interface
     cpu_err cpu_ack cpu_dat_o
     wbm_adr wbm_stb wbm_cyc wbm_sel
     wbm_we wbm_cti wbm_bte wbm_dat_o
-    undriven
+    redundant  
 end
 
 val wishbone : bus_type:bus_type -> burst_len:int -> 

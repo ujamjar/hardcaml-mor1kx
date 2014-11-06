@@ -12,6 +12,7 @@
 ***************************************************************************** *)
 
 open HardCaml.Signal.Comb
+open Utils
 
 module I = interface
    clk[1]
@@ -44,7 +45,7 @@ type states = Idle | Read | Burst | Write deriving(Enum,Bounded)
 let avalon ~burst_len i = 
   let open I in
   let open HardCaml.Signal.Guarded in
-  let module R = Utils.Regs(struct let clk = i.clk let rst = i.rst end) in
+  let module R = Regs(struct let clk = i.clk let rst = i.rst end) in
 
   let state, sm, next = R.statemachine vdd 
     (Enum_states.enum_from_to Bounded_states.min_bound Bounded_states.max_bound)
@@ -72,12 +73,10 @@ let avalon ~burst_len i =
         g_when (i.cpu_req &: (~: (i.avm_waitrequest))) [
           g_if i.cpu_we [
             next Write;
-          ] [ 
-            g_if i.cpu_burst [
+          ] @@ g_elif i.cpu_burst [
               next Burst;
-            ] [
-              next Read;
-            ];
+          ] [
+            next Read;
           ];
         ];
       ];

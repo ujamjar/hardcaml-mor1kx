@@ -18,10 +18,9 @@ module O : interface
   flag_set flag_clear carry_set carry_clear overflow_set overflow_clear
   alu_result alu_valid
   mul_result adder_result
-  undriven
+  redundant
 end
 
 val execute_alu : calculate_branch_dest:bool -> Option.options -> Option.features -> 
   HardCaml.Signal.Comb.t I.t -> HardCaml.Signal.Comb.t O.t
-
 

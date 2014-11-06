@@ -50,5 +50,18 @@ module Test_Execute_alu = struct
   let () = Rtl.Verilog.write print_string circ
 end
 
+module Test_wb_mux_cappuccino = struct
+  module X = Wb_mux.Cappuccino
+  module G = Interface.Gen(Comb)(X.I)(X.O)
+  let circ,_,_,_ = G.make "wb_mux_cappuccino" (X.wb_mux)
+  let () = Rtl.Verilog.write print_string circ
+end
+
+module Test_wb_mux_espresso = struct
+  module X = Wb_mux.Espresso
+  module G = Interface.Gen(Comb)(X.I)(X.O)
+  let circ,_,_,_ = G.make "wb_mux_espresso" (X.wb_mux)
+  let () = Rtl.Verilog.write print_string circ
+end
 
 
