@@ -43,16 +43,16 @@ end
 
 let comp_opc_width = 4
 let comp_opc_select = 24,21
-let comp_opc_eq  = consti comp_opc_width 0x0
-let comp_opc_ne  = consti comp_opc_width 0x1
-let comp_opc_gtu = consti comp_opc_width 0x2
-let comp_opc_geu = consti comp_opc_width 0x3
-let comp_opc_ltu = consti comp_opc_width 0x4
-let comp_opc_leu = consti comp_opc_width 0x5
-let comp_opc_gts = consti comp_opc_width 0xA
-let comp_opc_ges = consti comp_opc_width 0xB
-let comp_opc_lts = consti comp_opc_width 0xC
-let comp_opc_les = consti comp_opc_width 0xD
+let comp_opc_eq  = 0x0
+let comp_opc_ne  = 0x1
+let comp_opc_gtu = 0x2
+let comp_opc_geu = 0x3
+let comp_opc_ltu = 0x4
+let comp_opc_leu = 0x5
+let comp_opc_gts = 0xA
+let comp_opc_ges = 0xB
+let comp_opc_lts = 0xC
+let comp_opc_les = 0xD
 
 let jumpbranch_immediate_select = 25,0
 

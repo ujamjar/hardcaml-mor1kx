@@ -17,11 +17,17 @@ type multiplier =
   | Multiplier_threestage
   | Multiplier_pipelined
   | Multiplier_simulation
+  | Multiplier_serial
 
 type divider = 
   | Divider_none
   | Divider_serial
   | Divider_simulation
+
+type ffl1 = 
+  | Ffl1_none
+  | Ffl1_comb
+  | Ffl1_registered
 
 type options = 
   {
@@ -78,7 +84,7 @@ type features =
     ror                : bool;
     ext                : bool;
     cmov               : bool;
-    ffl1               : bool;
+    ffl1               : ffl1;
     msync              : bool;
     psync              : bool;
     csync              : bool;

@@ -42,6 +42,13 @@ module Test_Decode = struct
   let () = Rtl.Verilog.write print_string circ
 end
 
+module Test_Execute_alu = struct
+  module X = Execute_alu
+  module G = Interface.Gen(Comb)(X.I)(X.O)
+  let circ,_,_,_ = G.make "exec_alu" 
+    (X.execute_alu ~calculate_branch_dest:true Option.default_options Option.default_features)
+  let () = Rtl.Verilog.write print_string circ
+end
 
 
 

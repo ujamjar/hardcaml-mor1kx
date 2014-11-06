@@ -97,3 +97,7 @@ val sel_top : HardCaml.Signal.Comb.t -> int -> HardCaml.Signal.Comb.t
 val insert : HardCaml.Signal.Comb.t -> HardCaml.Signal.Comb.t -> int -> HardCaml.Signal.Comb.t
 val sel : HardCaml.Signal.Comb.t -> (int * int) -> HardCaml.Signal.Comb.t
 
+val cases : HardCaml.Signal.Comb.t -> HardCaml.Signal.Comb.t ->
+  (int * HardCaml.Signal.Comb.t) list -> HardCaml.Signal.Comb.t
+
+

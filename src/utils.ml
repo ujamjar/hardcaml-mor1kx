@@ -239,3 +239,13 @@ let insert x y n =
 
 let sel x (h,l) = select x h l
 
+let cases sel default l = 
+  let max = 1 + List.fold_left (fun acc (i,_) -> max i acc) 0 l in
+  let a = Array.make max default in
+  let () = List.iter (fun (i,x) -> a.(i) <- x) l in
+  if 1 lsl (width sel) = max then
+    mux sel (Array.to_list a)
+  else
+    mux sel (Array.to_list a @ [default])
+
+

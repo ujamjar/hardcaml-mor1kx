@@ -70,7 +70,7 @@ let alu_opc_invalid f secondary_invalid =
   let open Alu_opc in
   List.iter (fun i -> a.(i) <- gnd) [ add; sub; _or; xor; _and ];
   a.(cmov) <- b f.cmov;
-  a.(ffl1) <- b f.ffl1;
+  a.(ffl1) <- b (f.ffl1 = Ffl1_none);
   a.(div) <- b (f.divider = Divider_none);
   a.(divu) <- b (f.divider = Divider_none);
   a.(addc) <- b f.addc;

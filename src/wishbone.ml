@@ -34,7 +34,7 @@ let classic i =
     wbm_cti = gnd;
     wbm_bte = gnd;
     wbm_dat_o = i.cpu_dat_i;
-    undriven = i.wbm_rty |: lsb i.cpu_burst;
+    undriven = List.fold_left (&:) gnd @@ List.map lsb @@ I.to_list i;
   })
 
 let b3_registered_feedback ~burst_len i = 
@@ -56,7 +56,7 @@ let b3_registered_feedback ~burst_len i =
     cpu_err = i.wbm_err;
     cpu_ack = i.wbm_ack;
     cpu_dat_o = i.wbm_dat_i;
-    undriven = i.wbm_rty |: i.rst |: i.clk;
+    undriven = List.fold_left (&:) gnd @@ List.map lsb @@ I.to_list i;
   })
 
 let b3_read_bursting ~burst_len i = 
@@ -123,7 +123,7 @@ let b3_read_bursting ~burst_len i =
     cpu_err = i.wbm_err;
     cpu_ack = i.wbm_ack &: (~: (bursting &: address_differs)) &: i.cpu_req;
     cpu_dat_o = mux2 i.wbm_err (zero 32) i.wbm_dat_i;
-    undriven = i.wbm_rty |: lsb i.cpu_burst;
+    undriven = List.fold_left (&:) gnd @@ List.map lsb @@ I.to_list i;
   })
 
 let wishbone ~bus_type ~burst_len i = 

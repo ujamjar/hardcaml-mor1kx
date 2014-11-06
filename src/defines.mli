@@ -42,16 +42,16 @@ end
 val comp_opc_width : int
 val comp_opc_select : int * int
 
-val comp_opc_eq : HardCaml.Signal.Comb.t
-val comp_opc_ne : HardCaml.Signal.Comb.t
-val comp_opc_gtu : HardCaml.Signal.Comb.t
-val comp_opc_geu : HardCaml.Signal.Comb.t
-val comp_opc_ltu : HardCaml.Signal.Comb.t
-val comp_opc_leu : HardCaml.Signal.Comb.t
-val comp_opc_gts : HardCaml.Signal.Comb.t
-val comp_opc_ges : HardCaml.Signal.Comb.t
-val comp_opc_lts : HardCaml.Signal.Comb.t
-val comp_opc_les : HardCaml.Signal.Comb.t
+val comp_opc_eq : int
+val comp_opc_ne : int
+val comp_opc_gtu : int
+val comp_opc_geu : int
+val comp_opc_ltu : int
+val comp_opc_leu : int
+val comp_opc_gts : int
+val comp_opc_ges : int
+val comp_opc_lts : int
+val comp_opc_les : int
 
 val jumpbranch_immediate_select : int * int
 

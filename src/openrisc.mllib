@@ -7,3 +7,5 @@ Wishbone
 Cfgrs
 Branch_prediction
 Decode
+Execute_alu
+
