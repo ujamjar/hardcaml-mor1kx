@@ -64,4 +64,10 @@ module Test_wb_mux_espresso = struct
   let () = Rtl.Verilog.write print_string circ
 end
 
+module Test_Ticktimer = struct
+  module X = Ticktimer
+  module G = Interface.Gen(Comb)(X.I)(X.O)
+  let circ,_,_,_ = G.make "ticktimer" X.ticktimer
+  let () = Rtl.Verilog.write print_string circ
+end
 

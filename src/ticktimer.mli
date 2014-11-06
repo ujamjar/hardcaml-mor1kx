@@ -7,4 +7,5 @@ module O : interface
    spr_ttmr spr_ttcr spr_bus_ack spr_dat_o
 end
 
+val ticktimer : HardCaml.Signal.Comb.t I.t -> HardCaml.Signal.Comb.t O.t
 

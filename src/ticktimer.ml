@@ -67,7 +67,11 @@ let ticktimer i =
     ] []
   ] in
 
-  O.(map (fun (_,b) -> zero b) t)
-
+  O.({
+    spr_ttmr = spr_ttmr#q;
+    spr_ttcr = spr_ttcr#q;
+    spr_bus_ack;
+    spr_dat_o;
+  })
 
 
