@@ -9,6 +9,7 @@
  Copyright (C) 2012 Authors
 
  Author(s): Julius Baxter <juliusbaxter@gmail.com>
+            Andy Ray <andy.ray@ujamjar.com>
 
 ***************************************************************************** *)
 

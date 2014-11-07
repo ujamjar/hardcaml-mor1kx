@@ -8,6 +8,7 @@
   Description: mor1kx processor avalon bus bridge
 
   Copyright (C) 2013 Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
+                     Andy Ray <andy.ray@ujamjar.com>
 
 ***************************************************************************** *)
 

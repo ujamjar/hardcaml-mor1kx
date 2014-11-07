@@ -11,6 +11,7 @@
 
   Copyright (C) 2012 Julius Baxter <juliusbaxter@gmail.com>
   Copyright (C) 2012-2014 Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
+  Copyright (C) 2014 Andy Ray <andy.ray@ujamjar.com>
 
 ***************************************************************************** *)
 
