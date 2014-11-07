@@ -1,5 +1,51 @@
 (* instantiate each submodule to make sure they work *)
 
+(*
+
+  Map of mor1kx verilog to ocaml modules 
+
+  mor1kx_branch_prediction.v          -> Branch_prediction
+  mor1kx_bus_if_avalon.v              -> Avalon
+  mor1kx_bus_if_wb32.v                -> Wishbone
+  mor1kx_cache_lru.v
+  mor1kx_cfgrs.v                      -> Cfgrs
+  mor1kx_cpu_cappuccino.v
+  mor1kx_cpu_espresso.v
+  mor1kx_cpu_prontoespresso.v
+  mor1kx_cpu.v
+  mor1kx_ctrl_cappuccino.v
+  mor1kx_ctrl_espresso.v
+  mor1kx_ctrl_prontoespresso.v
+  mor1kx_dcache.v
+  mor1kx_decode_execute_cappuccino.v
+  mor1kx_decode.v                     -> Decode
+  mor1kx-defines.v                    -> Defines
+  mor1kx_dmmu.v
+  mor1kx_execute_alu.v                -> Execute_alu
+  mor1kx_execute_ctrl_cappuccino.v
+  mor1kx_fetch_cappuccino.v
+  mor1kx_fetch_espresso.v
+  mor1kx_fetch_prontoespresso.v
+  mor1kx_fetch_tcm_prontoespresso.v
+  mor1kx_icache.v
+  mor1kx_immu.v
+  mor1kx_lsu_cappuccino.v
+  mor1kx_lsu_espresso.v
+  mor1kx_pic.v                        -> Pic
+  mor1kx_rf_cappuccino.v
+  mor1kx_rf_espresso.v
+  mor1kx_simple_dpram_sclk.v          -> Ram
+  mor1kx-sprs.v                       -> Spr
+  mor1kx_store_buffer.v
+  mor1kx_ticktimer.v                  -> Ticktimer
+  mor1kx_true_dpram_sclk.v            -> Ram
+  mor1kx_utils.vh
+  mor1kx.v
+  mor1kx_wb_mux_cappuccino.v          -> Wb_mux
+  mor1kx_wb_mux_espresso.v            -> Wb_mux
+
+*)
+
 open HardCaml
 open Signal
 
@@ -68,6 +114,13 @@ module Test_Ticktimer = struct
   module X = Ticktimer
   module G = Interface.Gen(Comb)(X.I)(X.O)
   let circ,_,_,_ = G.make "ticktimer" X.ticktimer
+  let () = Rtl.Verilog.write print_string circ
+end
+
+module Test_Pic = struct
+  module X = Pic
+  module G = Interface.Gen(Comb)(X.I)(X.O)
+  let circ,_,_,_ = G.make "pic" (X.pic Option.default_options)
   let () = Rtl.Verilog.write print_string circ
 end
 

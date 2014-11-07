@@ -1,5 +1,5 @@
-val base : int -> int
-val offset : int -> int
+val base : HardCaml.Signal.Comb.t -> HardCaml.Signal.Comb.t
+val offset : HardCaml.Signal.Comb.t -> HardCaml.Signal.Comb.t
 
 (* Addresses *)
 val sys_base : HardCaml.Signal.Comb.t

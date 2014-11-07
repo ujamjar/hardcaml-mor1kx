@@ -32,7 +32,7 @@ let ticktimer i =
   let spr_ttmr = R.g_reg ~e:vdd 32 in
   let spr_ttcr = R.g_reg ~e:vdd 32 in
 
-  let cmp_spr_access x = i.spr_access &: (sel_bottom i.spr_addr 11 ==: sel_bottom x 11) in 
+  let cmp_spr_access x = i.spr_access &: (Spr.offset i.spr_addr ==: Spr.offset x) in 
   let spr_ttmr_access = cmp_spr_access Spr.ttmr_addr in
   let spr_ttcr_access = cmp_spr_access Spr.ttcr_addr in
 
