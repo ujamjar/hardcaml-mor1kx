@@ -30,7 +30,7 @@
   mor1kx_icache.v
   mor1kx_immu.v
   mor1kx_lsu_cappuccino.v
-  mor1kx_lsu_espresso.v
+  mor1kx_lsu_espresso.v               -> Lsu.Espresso
   mor1kx_pic.v                        -> Pic
   mor1kx_rf_cappuccino.v
   mor1kx_rf_espresso.v
@@ -41,8 +41,8 @@
   mor1kx_true_dpram_sclk.v            -> Ram
   mor1kx_utils.vh
   mor1kx.v
-  mor1kx_wb_mux_cappuccino.v          -> Wb_mux
-  mor1kx_wb_mux_espresso.v            -> Wb_mux
+  mor1kx_wb_mux_cappuccino.v          -> Wb_mux.Cappuccino
+  mor1kx_wb_mux_espresso.v            -> Wb_mux.Espresso
 
 *)
 
@@ -121,6 +121,13 @@ module Test_Pic = struct
   module X = Pic
   module G = Interface.Gen(Comb)(X.I)(X.O)
   let circ,_,_,_ = G.make "pic" (X.pic Option.default_options)
+  let () = Rtl.Verilog.write print_string circ
+end
+
+module Test_Lsu_espresso = struct
+  module X = Lsu.Espresso
+  module G = Interface.Gen(Comb)(X.I)(X.O)
+  let circ,_,_,_ = G.make "lsu_espresso" (X.lsu ~registered_io:false)
   let () = Rtl.Verilog.write print_string circ
 end
 

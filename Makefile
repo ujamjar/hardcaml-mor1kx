@@ -4,7 +4,7 @@ lib:
 	ocamlbuild -use-ocamlfind openrisc.cma openrisc.cmxa
 
 tests:
-	ocamlbuild -use-ocamlfind test.byte
+	ocamlbuild -use-ocamlfind test.byte statemachine.byte
 
 clean:
 	ocamlbuild -clean

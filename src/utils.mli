@@ -30,6 +30,26 @@ module Multiram : sig
 
 end
 
+module Gray(B : HardCaml.Comb.S) : sig
+
+    val to_list : int -> B.t list
+
+    val binary_to_gray : B.t -> B.t
+
+    val gray_to_binary : B.t -> B.t
+
+    val test : int -> bool * bool
+
+end
+
+val statemachine : ?encoding:[ `binary | `onehot | `gray ] ->
+  HardCaml.Signal.Types.register ->
+  HardCaml.Signal.Comb.t ->
+  'a list ->
+  ('a -> HardCaml.Signal.Comb.t) *                                            (* is_state *)
+  ('a HardCaml.Signal.Guarded.cases -> HardCaml.Signal.Guarded.statement) *   (* switch *)
+  ('a -> HardCaml.Signal.Guarded.statement)                                   (* next *)
+
 module type Spec = sig
     val reg_spec : HardCaml.Signal.Types.register
     val ram_spec : HardCaml.Signal.Types.register
@@ -82,7 +102,7 @@ module type S = sig
         ?c:signal -> ?cl:signal -> ?cv:signal ->
         ?ge:signal ->
         e:signal -> 'a list -> 
-        (variable * ('a cases -> statement) * ('a -> statement))
+        (('a -> signal) * ('a cases -> statement) * ('a -> statement))
 
     val memory : 
         ?clk:signal -> ?clkl:signal ->

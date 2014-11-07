@@ -2,3 +2,5 @@
 #require "hardcaml,deriving";;
 #load "openrisc.cma";;
 
+module B = HardCaml.Bits.Comb.IntbitsList
+

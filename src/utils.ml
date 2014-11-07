@@ -1,5 +1,7 @@
 open HardCaml.Signal.Comb
 
+(***********************************************************************)
+
 type spr_part = 
   | VI of (int * int) * int
   | BI of int * int
@@ -33,6 +35,8 @@ let mk_spr n l =
       (if v then vdd else gnd) @: f (pos+1) t
   in
   uresize (f 0 l) 32
+
+(***********************************************************************)
 
 module Multiram = struct
   (* XXX can't remember if I tested this properly... *)
@@ -117,6 +121,145 @@ module Multiram = struct
 
 end
 
+(***********************************************************************)
+
+module Gray(B : HardCaml.Comb.S) = struct
+
+  open B
+
+  let rec to_list bits = 
+    if bits=1 then [ gnd; vdd ]
+    else
+      let c = to_list (bits-1) in
+      (List.map ((@:) gnd) c) @ (List.map ((@:) vdd) (List.rev c))
+
+  let binary_to_gray b = b ^: (srl b 1)
+  
+  let gray_to_binary b = 
+    let ue x = uresize x (width b) in
+    let rec f b mask = 
+      let b = b ^: (ue mask) in
+      if width mask = 1 then b
+      else f b (msbs mask)
+    in
+    f b (msbs b)
+
+  let test n = 
+    let a = to_list n in
+    let b = Array.(to_list (init (1 lsl n) 
+      (fun i -> binary_to_gray (consti n i))))
+    in
+    let c = List.map (fun x -> B.to_int (gray_to_binary x)) b in
+    a=b, c=HardCaml.Utils.range (1 lsl n)
+
+end
+
+
+(***********************************************************************)
+
+(* new statemchine implementation *)
+let statemachine_binary rspec enable states = 
+  let open HardCaml.Signal.Guarded in
+  (* assign a value to each state *)
+  let nstates = List.length states in
+  let ls = HardCaml.Utils.clog2 nstates in
+  let states = HardCaml.Utils.mapi (fun i s -> s, consti ls i) states in
+  (* state variable *)
+  let state_var = g_reg rspec enable ls in 
+  (* update state *)
+  let state_val s = 
+    try List.assoc s states 
+    with _ -> 
+      (* report that we couldn't find the state.  We cant show which
+        * one, as we don't know it's type (even if it will generally be 
+        * a string *)
+      failwith "couldn't find state"
+  in
+  let next_state s = state_var $== (state_val s) in
+  let state_var = state_var#q (*-- "state_binary"*) in
+  let switch cases = 
+    g_switch (state_var) 
+      (List.map (fun (s, c) -> state_val s, c) cases)
+  in
+  (fun s -> state_val s ==: state_var),
+  switch, next_state
+
+let statemachine_onehot rspec enable states = 
+  let open HardCaml.Signal.Guarded in
+  let nstates = List.length states in
+  let onehot i = 
+    let module B = HardCaml.Bits.Comb.IntbitsList in
+    let ls = HardCaml.Utils.clog2 nstates in
+    constibl B.((binary_to_onehot (consti ls i)).[nstates-1:0])
+  in
+  let states = HardCaml.Utils.mapi 
+    (fun i s -> s, (i, onehot i)) states 
+  in
+  let state_var = 
+    g_reg 
+      HardCaml.Signal.Types.({ rspec with (* must be reset to get into state 0 *)
+        reg_clear_value = one nstates;
+        reg_reset_value = one nstates; })
+    enable nstates in 
+  (* update state *)
+  let state_val s = 
+    try List.assoc s states 
+    with _ -> 
+      (* report that we couldn't find the state.  We cant show which
+        * one, as we don't know it's type (even if it will generally be 
+        * a string *)
+      failwith "couldn't find state"
+  in
+  let next_state s = state_var $== snd (state_val s) in
+  let state_var = state_var#q (*-- "state_onehot"*) in
+  let switch cases = 
+    g_proc
+      (List.map (fun (s, c) ->
+        let i, _ = state_val s in
+        g_when (bit state_var i) c) cases)
+  in
+  (fun s -> bit state_var (fst (state_val s))),
+  switch, next_state
+
+let statemachine_gray rspec enable states = 
+  let open HardCaml.Signal.Guarded in
+  (* assign a value to each state *)
+  let nstates = List.length states in
+  let ls = HardCaml.Utils.clog2 nstates in
+  let gray i = 
+    let module B = HardCaml.Bits.Comb.IntbitsList in
+    let module G = Gray(B) in
+    constibl (G.binary_to_gray (B.consti ls i))
+  in
+  let states = HardCaml.Utils.mapi (fun i s -> s, gray i) states in
+  (* state variable *)
+  let state_var = g_reg rspec enable ls in 
+  (* update state *)
+  let state_val s = 
+    try List.assoc s states 
+    with _ -> 
+      (* report that we couldn't find the state.  We cant show which
+        * one, as we don't know it's type (even if it will generally be 
+        * a string *)
+      failwith "couldn't find state"
+  in
+  let next_state s = state_var $== (state_val s) in
+  let state_var = state_var#q (*-- "state_gray"*) in
+  let switch cases = 
+    g_switch state_var 
+      (List.map (fun (s, c) -> state_val s, c) cases)
+  in
+  (fun s -> state_val s ==: state_var),
+  switch, next_state
+
+let statemachine ?(encoding=`binary) = 
+  match encoding with
+  | `binary -> statemachine_binary
+  | `onehot -> statemachine_onehot
+  | `gray -> statemachine_gray
+
+(***********************************************************************)
+
 module type Spec = sig
     val reg_spec : HardCaml.Signal.Types.register
     val ram_spec : HardCaml.Signal.Types.register
@@ -169,7 +312,7 @@ module type S = sig
         ?c:signal -> ?cl:signal -> ?cv:signal ->
         ?ge:signal ->
         e:signal -> 'a list -> 
-        (variable * ('a cases -> statement) * ('a -> statement))
+        (('a -> signal) * ('a cases -> statement) * ('a -> statement))
 
     val memory : 
         ?clk:signal -> ?clkl:signal ->
@@ -276,7 +419,7 @@ module Make_seq(S : Spec) = struct
         ?c ?cl ?cv 
         ?ge ~e states =
         let spec = make_spec ?clk ?clkl ?r ?rl ?rv ?c ?cl ?cv ?ge S.reg_spec in
-        Signal.Guarded.statemachine spec e states
+        statemachine spec e states
  
     let memory
         ?clk ?clkl 
@@ -325,6 +468,8 @@ end) = Make_seq(struct
   let ram_spec = { r_none with reg_clock = S.clk }
 end)
 
+(***********************************************************************)
+
 let drop_bottom x n = select x (width x - 1) n
 let drop_top x n = select x (width x - 1 - n) 0
 let sel_bottom x n = select x (n-1) 0
@@ -349,7 +494,6 @@ let cases sel default l =
   else
     mux sel (Array.to_list a @ [default])
 
-(* XXX move to hardcaml *)
 let g_elif c t f = HardCaml.Signal.Guarded.([ g_if c t f ])
 
 let ($==\) (x, l) y = 

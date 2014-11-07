@@ -47,62 +47,41 @@ let avalon ~burst_len i =
   let open HardCaml.Signal.Guarded in
   let module R = Regs(struct let clk = i.clk let rst = i.rst end) in
 
-  let state, sm, next = R.statemachine vdd 
+  let state_is, sm, next = R.statemachine vdd 
     (Enum_states.enum_from_to Bounded_states.min_bound Bounded_states.max_bound)
   in
 
-  let o = O.(map (fun (_,bits) -> g_wire (zero bits)) t) in
-
   let () = compile [
-
-    o.O.cpu_err $== gnd;
-    o.O.cpu_ack $== i.avm_readdatavalid;
-    o.O.cpu_dat_o $== i.avm_readdata;
-    o.O.avm_address $== i.cpu_adr;
-    o.O.avm_byteenable $== i.cpu_bsel;
-    o.O.avm_read $== gnd;
-    o.O.avm_burstcount $== (mux2 i.cpu_burst (consti 4 burst_len) (consti 4 1));
-    o.O.avm_write $== gnd;
-    o.O.avm_writedata $== i.cpu_dat_i;
 
     sm [
 
       Idle, [
-        o.O.avm_read $== (i.cpu_req &: (~: (i.cpu_we)));
-        o.O.avm_write $== (i.cpu_req &: i.cpu_we);
         g_when (i.cpu_req &: (~: (i.avm_waitrequest))) [
-          g_if i.cpu_we [
-            next Write;
-          ] @@ g_elif i.cpu_burst [
-              next Burst;
-          ] [
-            next Read;
-          ];
+          g_if i.cpu_we [ next Write; ] @@ 
+          g_elif i.cpu_burst [ next Burst; ] 
+          [ next Read; ];
         ];
       ];
-
-      Read, [
-        g_when i.avm_readdatavalid [
-          next Idle;
-        ];
-      ];
-
-      Burst, [
-        o.O.avm_burstcount $==. 1;
-        g_when (~: (i.cpu_burst) &: i.avm_readdatavalid) [
-          next Idle;
-        ]
-      ];
-
-      Write, [
-        o.O.cpu_ack $== vdd;
-        next Idle;
-      ];
+      Read, [ g_when i.avm_readdatavalid [ next Idle; ]; ];
+      Burst, [ g_when (~: (i.cpu_burst) &: i.avm_readdatavalid) [ next Idle; ] ];
+      Write, [ next Idle; ];
 
     ];
 
   ] in
 
-  O.(map (fun o -> o#q) o)
+  O.({
+    cpu_err = gnd;
+    cpu_ack = i.avm_readdatavalid |: state_is Write;
+    cpu_dat_o = i.avm_readdata;
+    avm_address = i.cpu_adr;
+    avm_byteenable = i.cpu_bsel;
+    avm_read = i.cpu_req &: (~: (i.cpu_we)) &: state_is Idle;
+    avm_burstcount = 
+      mux2 (i.cpu_burst &: ~: (state_is Burst)) 
+        (consti 4 burst_len) (consti 4 1);
+    avm_write = i.cpu_req &: i.cpu_we &: state_is Idle;
+    avm_writedata = i.cpu_dat_i;
+  })
 
 
