@@ -70,13 +70,19 @@ module True_dp(S : S) = struct
     let open I in
     let module R = Utils.Regs(struct let clk = i.clk let rst = empty end) in
     let size = 1 lsl S.addr_width in
-    R.multi_ram_wbr size
-      ~wr:Utils.Multiram.(
-        [| { we = i.we_a; wa = i.addr_a; wd = i.din_a; };
-           { we = i.we_b; wa = i.addr_b; wd = i.din_b; }; |])
-      ~rd:Utils.Multiram.(
-        [| { re = ~: (i.we_a); ra = i.addr_a; };
-           { re = ~: (i.we_b); ra = i.addr_b; }; |])
+    let dout = 
+      R.multi_ram_wbr size
+        ~wr:Utils.Multiram.(
+          [| { we = i.we_a; wa = i.addr_a; wd = i.din_a; };
+            { we = i.we_b; wa = i.addr_b; wd = i.din_b; }; |])
+        ~rd:Utils.Multiram.(
+          [| { re = ~: (i.we_a); ra = i.addr_a; };
+            { re = ~: (i.we_b); ra = i.addr_b; }; |])
+    in
+    O.({
+      dout_a = dout.(0);
+      dout_b = dout.(1);
+    })
 
 end
 

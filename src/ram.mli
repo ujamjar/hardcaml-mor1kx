@@ -26,6 +26,10 @@ module Simple_dp(S : S) : sig
     dout
   end
 
+  val ram : enable_bypass:bool -> 
+    HardCaml.Signal.Comb.t I.t ->
+    HardCaml.Signal.Comb.t O.t
+
 end
 
 module True_dp(S : S) : sig
@@ -39,6 +43,10 @@ module True_dp(S : S) : sig
   module O : interface
     dout_a dout_b
   end
+
+  val ram : 
+    HardCaml.Signal.Comb.t I.t ->
+    HardCaml.Signal.Comb.t O.t
 
 end
 
