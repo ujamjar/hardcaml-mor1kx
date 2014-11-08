@@ -237,105 +237,122 @@ module Cappuccino = struct
     dbus_we[1]
     dbus_burst[1]
   end
+
+  type sm = Idle | Dc_refill | Read | Write | Tlb_reload 
+    deriving(Bounded, Enum)
+
+  (* this will become simpler once we have the dmmu, store_buffer, and dcache module interfaces *)
 (*
   let lsu o f i = 
     let open I in
     let module R = Regs(struct let clk = i.clk let rst = i.rst end) in
 
     let regm (c0,v0) (c1,v1) = R.reg_fb ~e:vdd ~w:1 (fun d -> mux2 c0 v0 @@ mux2 c1 v1 @@ d) in
+    let state_is, sm, next = R.statemachine ~e:vdd 
+      (Enum_sm.enum_from_to Bounded_sm.min_bound Bounded_sm.max_bound)
+    in
 
     (***********)
     let dc_access = wire 1 in
+    let dc_refill = wire 1 in
+    let store_buffer_write = wire 1 in
+    let write_done = wire 1 in
+    let dbus_ack = wire 1 in
+    let dc_ack = wire 1 in
+    let dbus_dat = wire operand_width in
+    let dc_ldat = wire 32 in
+    let dbus_adr = wire operand_width in
+    let dc_refill_done = wire 1 in
     (***********)
 
-    let rec snoop_valid = i.snoop_en &: (~: ((i.snoop_adr ==: dbus_adr_o) &: i.dbus_ack)) 
+    let snoop_valid = i.snoop_en &: (~: ((i.snoop_adr ==: dbus_adr) &: i.dbus_ack)) in
  
-    and ctrl_op_lsu = i.ctrl_op_lsu_load |: i.ctrl_op_lsu_store 
+    let ctrl_op_lsu = i.ctrl_op_lsu_load |: i.ctrl_op_lsu_store in
  
-    and lsu_sdat = 
+    let lsu_sdat = 
       mux2 (i.ctrl_lsu_length ==:. 0b00) (repeat (sel_bottom i.ctrl_rfb  8) 4) @@ (* byte access *)
       mux2 (i.ctrl_lsu_length ==:. 0b01) (repeat (sel_bottom i.ctrl_rfb 16) 2) @@ (* halfword access *)
 		  i.ctrl_rfb                                                                  (* word access *)
+    in
 
-    and align_err_word = reduce (|:) (bits i.ctrl_lsu_adr.[1:0]) 
-    and align_err_short = i.ctrl_lsu_adr.[0:0] 
+    let align_err_word = reduce (|:) (bits i.ctrl_lsu_adr.[1:0]) in
+    let align_err_short = i.ctrl_lsu_adr.[0:0] in
  
-    and lsu_valid_o = (lsu_ack |: access_done) &: (~: tlb_reload_busy) &: (~: dc_snoop_hit) 
- 
-    and lsu_except_dbus_o = except_dbus |: store_buffer_err
- 
-    and align_err = 
+    let align_err = 
       (i.ctrl_lsu_length ==:. 0b10) &: align_err_word |: 
       (i.ctrl_lsu_length ==:. 0b01) &: align_err_short 
+    in
+
+    let except_align = ctrl_op_lsu &: align_err in
  
-    and except_align = ctrl_op_lsu &: align_err 
+    let lsu_except_align_o = except_align &: (~: (i.pipeline_flush)) in
  
-    and lsu_except_align_o = except_align &: (~: (i.pipeline_flush)) 
+    let except_dtlb_miss = ctrl_op_lsu &: tlb_miss &: i.dmmu_enable &: (~: tlb_reload_busy) in
  
-    and except_dtlb_miss = ctrl_op_lsu &: tlb_miss &: i.dmmu_enable &: (~: tlb_reload_busy) 
+    let lsu_except_dtlb_miss_o = except_dtlb_miss &: (~: (i.pipeline_flush)) in
  
-    and lsu_except_dtlb_miss_o = except_dtlb_miss &: (~: (i.pipeline_flush)) 
- 
-    and except_dpagefault = 
+    let except_dpagefault = 
       ctrl_op_lsu &: pagefault &: i.dmmu_enable &: 
       (~: tlb_reload_busy) |: tlb_reload_pagefault 
- 
-    and lsu_except_dpagefault_o = except_dpagefault &: (~: (i.pipeline_flush)) 
+    in
+    let lsu_except_dpagefault_o = except_dpagefault &: (~: (i.pipeline_flush)) in
 
-    and access_done = regm (i.padv_execute, gnd) (lsu_ack,vdd) 
-    and except_dbus = regm (i.padv_execute |: i.pipeline_flush, gnd) (i.dbus_err, vdd) 
-    and except_dtlb_miss_r = regm (i.padv_execute, gnd) (except_dtlb_miss, vdd) 
-    and except_dpagefault_r = regm (i.padv_execute, gnd) (except_dpagefault, vdd) 
-    and store_buffer_err = regm (i.pipeline_flush, gnd) (i.dbus_err &: dbus_we, vdd) 
+    let access_done = regm (i.padv_execute, gnd) (lsu_ack,vdd) in
+    let except_dbus = regm (i.padv_execute |: i.pipeline_flush, gnd) (i.dbus_err, vdd) in
+    let except_dtlb_miss_r = regm (i.padv_execute, gnd) (except_dtlb_miss, vdd) in
+    let except_dpagefault_r = regm (i.padv_execute, gnd) (except_dpagefault, vdd) in
+    let store_buffer_err = regm (i.pipeline_flush, gnd) (i.dbus_err &: dbus_we, vdd) in
 
-    and dbus_we = dbus_we_r &: ((~: dbus_atomic) |: atomic_reserve) 
-    and dbus_bsel = bsel i.ctrl_lsu_length i.ctrl_lsu_adr 
-    and dbus_dat_aligned = aligned i.ctrl_lsu_adr lsu_ldat 
-    and dbus_dat_extended = extended i.ctrl_lsu_zext i.ctrl_lsu_length dbus_dat_aligned 
+    let dbus_we = dbus_we_r &: ((~: dbus_atomic) |: atomic_reserve) in
+    let dbus_bsel = bsel i.ctrl_lsu_length i.ctrl_lsu_adr in
+    let dbus_dat_aligned = aligned i.ctrl_lsu_adr lsu_ldat in
+    let dbus_dat_extended = extended i.ctrl_lsu_zext i.ctrl_lsu_length dbus_dat_aligned in
 
-    and dbus_access = 
+    let dbus_access = 
       ((~: dc_access) |: tlb_reload_busy |: i.ctrl_op_lsu_store) &:
-			(state <>: DC_REFILL) |: (state ==: WRITE) (* XXX *)
+			(~: (state_is Dc_refill)) |: (state_is Write) (* XXX *)
+    in
+    let dc_refill_r = R.reg ~e:vdd dc_refill in
 
-    and dc_result_r = R.reg ~e:vdd dc_refill 
+    let store_buffer_ack = if f.store_buffer then store_buffer_write else write_done in
 
-    and store_buffer_ack = if f.store_buffer then store_buffer_write else write_done 
+    let lsu_ack = 
+        mux2 (i.ctrl_op_lsu_store |: state_is Write) 
+          (store_buffer_ack &: (~: (i.ctrl_op_lsu_atomic)) |: write_done &: i.ctrl_op_lsu_atomic) 
+          (mux2 dbus_access dbus_ack dc_ack)
+    in
+    let lsu_ldat = mux2 dbus_access dbus_dat dc_ldat in
 
-    and lsu_ack = 
-        mux2 (i.ctrl_op_lsu_store_i |: state ==: WRITE) 
-          (store_buffer_ack &: (~: (i.ctrl_op_lsu_atomic)) |: 
-           write_done &: i.ctrl_op_lsu_atomic) 
-        (mux2 dbus_access dbus_ack dc_ack)
+    let dbus_adr_o = dbus_adr in
 
-    and lsu_ldat = mux2 dbus_access dbus_dat dc_ldat
+    let dbus_dat_o = dbus_dat in
 
-    and dbus_adr_o = dbus_adr
+    let dbus_burst_o = (state_is Dc_refill) &: (~: dc_refill_done) in
 
-    and dbus_dat_o = dbus_dat
-
-    and dbus_burst_o = (state ==: DC_REFILL) &: (~: dc_refill_done)
-
-    and next_dbus_adr = 
+    let next_dbus_adr = 
       if o.dcache_block_width = 5 then 
 			  (dbus_adr.[31:5] @: (dbus_adr.[4:0] +:. 4)) (* 32 byte *)
       else
 			  (dbus_adr.[31:4] @: (dbus_adr.[3:0] +:. 4)) (* 16 byte *)
-
-    and dbus_err = R.reg ~e:vdd i.dbus_err 
-
-    (* XXXXXXXX *)
-    and tlb_reload_busy = gnd
-    and dc_snoop_hit = gnd
-    and tlb_miss = gnd
-    and pagefault = gnd
-    and tlb_reload_pagefault = gnd
-    and dbus_we_r = gnd
-    and dbus_atomic = gnd 
-    and atomic_reserve = gnd
     in
+    let dbus_err = R.reg ~e:vdd i.dbus_err in
+
+    let lsu_valid = (lsu_ack |: access_done) &: (~: tlb_reload_busy) &: (~: dc_snoop_hit) in
+    let lsu_except_dbus_o = except_dbus |: store_buffer_err in
+ 
+ 
+    (* XXXXXXXX *)
+    let tlb_reload_busy = gnd in
+    let dc_snoop_hit = gnd in
+    let tlb_miss = gnd in
+    let pagefault = gnd in
+    let tlb_reload_pagefault = gnd in
+    let dbus_we_r = gnd in
+    let dbus_atomic = gnd in
+    let atomic_reserve = gnd in
 
     O.(map (fun (_,b) -> zero b) t)
-*)
+  *)
 end
 
 
