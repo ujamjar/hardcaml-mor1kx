@@ -67,8 +67,51 @@ let immu o f i =
   let spr_bus_ack = R.reg ~e:vdd (i.spr_bus_stb &: (i.spr_bus_addr.[15:11] ==:. 2)) in
   let spr_bus_ack_r = R.reg ~e:vdd spr_bus_ack in
 
+
+
   (* XXX END *)
+
+  (* rams *)
+
+  (* XXX DELETE ME *)
+  let itlb_match_addr, itlb_match_we, itlb_match_din = gnd,gnd,gnd in
+  let itlb_match_huge_addr, itlb_match_huge_we, itlb_match_reload_din = gnd,gnd,gnd in
+  let itlb_trans_addr, itlb_trans_we, itlb_trans_din = gnd,gnd,gnd in
+  let itlb_trans_huge_addr, itlb_trans_huge_we, itlb_trans_reload_din = gnd,gnd,gnd in
+
+  let itm = Ram.(ram 
+    I.({
+      clk = i.clk;
+      addr_a = itlb_match_addr;
+      we_a = itlb_match_we;
+      din_a = itlb_match_din;
+      addr_b = itlb_match_huge_addr;
+      we_b  = itlb_match_huge_we;
+      din_b = itlb_match_reload_din;
+    }))
+  in
+
+  let itt = Ram.(ram 
+    I.({
+      clk = i.clk;
+      addr_a = itlb_trans_addr;
+      we_a = itlb_trans_we;
+      din_a = itlb_trans_din;
+      addr_b = itlb_trans_huge_addr;
+      we_b  = itlb_trans_huge_we;
+      din_b = itlb_trans_reload_din;
+    }))
+  in
+  
+  let () = Ram.O.(
+    itlb_match_dout <== itm.dout_a;
+    itlb_match_huge_dout <== itm.dout_b;
+    itlb_trans_dout <== itt.dout_a;
+    itlb_trans_huge_dout <== itt.dout_b;
+  ) in
+
   let spr_bus_ack = spr_bus_ack &: i.spr_bus_stb &: (i.spr_bus_addr.[15:11] ==:. 2) in
+
   O.(map (fun (_,b) -> zero b) t)
 
 
