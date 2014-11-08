@@ -132,11 +132,11 @@ let multiplier_serial i a b =
     g_if (cnt#q <>:. 0) [
       cnt $== cnt#q -:. 1;
       g_if (lsb prod#q) [
-        (prod,ow-1) $==\ (ue (select prod#q (ow*2-1) ow)) +: mul_a;
+        (prod,ow-1) $==\ (ue (prod#q.[ow*2-1:ow])) +: mul_a;
       ] [
-        (prod,ow-1) $==\ ue (select prod#q (ow*2-1) ow);
+        (prod,ow-1) $==\ ue (prod#q.[ow*2-1:ow]);
       ];
-      (prod,0) $==\ select prod#q (ow-1) 1;
+      (prod,0) $==\ prod#q.[ow-1:1];
       g_when (cnt#q ==:. 1) [
         mul_done $==. 1;
       ]
@@ -282,7 +282,7 @@ let def_shift = { shift_result=zero operand_width; shift_valid=vdd }
 
 let shifter_barrel f i a b = 
   let open I in
-  let opc_alu_shr = select i.opc_alu_secondary (Alu_opc.secondary_width-1) 0 in
+  let opc_alu_shr = i.opc_alu_secondary.[Alu_opc.secondary_width-1:0] in
   let op_sll = opc_alu_shr ==:. Alu_opc.secondary_shrt_sll in
   (*let op_srl = opc_alu_shr ==:. Alu_opc.secondary_shrt_srl in*)
   let op_sra = opc_alu_shr ==:. Alu_opc.secondary_shrt_sra in
@@ -308,11 +308,11 @@ let shifter_barrel f i a b =
 let shifter_serial f i a b = 
   let open I in
   let module R = Regs(struct let clk = i.clk let rst = i.rst end) in
-  let opc_alu_shr = select i.opc_alu_secondary (Alu_opc.secondary_width-1) 0 in
+  let opc_alu_shr = i.opc_alu_secondary.[Alu_opc.secondary_width-1:0] in
   let cnt = R.g_reg ~e:vdd 1 in
   let go = R.g_reg ~e:vdd 5 in
   let result = R.g_reg ~e:vdd operand_width in
-  let loop_limit = cnt#q ==: (select b 4 0) in
+  let loop_limit = cnt#q ==: b.[4:0] in
   let open HardCaml.Signal.Guarded in
   let () = compile [
     g_when i.decode_valid [

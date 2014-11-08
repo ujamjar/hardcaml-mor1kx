@@ -122,8 +122,8 @@ let opc_invalid f alu_invalid sys_invalid =
 
 let decode_op_lsu_load f insn opc =
   let c = 
-    (select insn 31 30 ==:. 0b10) &:
-    (~: (reduce (&:) (bits (select insn 28 26)))) &:
+    (insn.[31:30] ==:. 0b10) &:
+    (~: (reduce (&:) (bits (insn.[28:26])))) &:
     (~: (bit insn 29))
   in
   if f.atomic then c |: (opc.(Opcode.lwa)) else c
@@ -180,8 +180,8 @@ let decode o f i =
   let op_movhi = opc.(Opcode.movhi) in
 
   let rf_wb = Opcode.(opcl opc [ jal; movhi; jalr; lwa ]) |:
-                      (select i.insn 31 30 ==:. 0b10 &: (~: (opc.(Opcode.sfimm)))) |:
-                      (select i.insn 31 30 ==:. 0b11 &: 
+                      (i.insn.[31:30] ==:. 0b10 &: (~: (opc.(Opcode.sfimm)))) |:
+                      (i.insn.[31:30] ==:. 0b11 &: 
                           (~: (opc.(Opcode.sf) |: op_mtspr |: op_lsu_store)))
   in
   let rfa_adr = sel i.insn ra_select in
@@ -189,19 +189,19 @@ let decode o f i =
   let rfd_adr = sel i.insn rd_select in
 
   let imm16 = mux2 (op_mtspr |: op_lsu_store) 
-    (select i.insn 25 21 @: select i.insn 10 0)
+    (i.insn.[25:21] @: i.insn.[10:0])
     (sel i.insn imm_select)
   in
-  let immjbr_upper = select i.insn 25 16 in
+  let immjbr_upper = i.insn.[25:16] in
   let imm_sext = sresize imm16 32 in
   let imm_sext_sel = 
-    (select opc_insn 5 4 ==:. 0b10 &: 
+    (opc_insn.[5:4] ==:. 0b10 &: 
       (~: (opc.(Opcode.ori))) &: (~: (opc.(Opcode.andi)))) |:
     (opcl opc Opcode.([swa; lwa; sw; sh; sb]))
   in
   let imm_zext = uresize imm16 32 in
   let imm_zext_sel = 
-    (select opc_insn 5 4 ==:. 0b10 &: 
+    (opc_insn.[5:4] ==:. 0b10 &: 
       (opc.(Opcode.ori) |: opc.(Opcode.andi))) |:
     (opc.(Opcode.mtspr))
   in

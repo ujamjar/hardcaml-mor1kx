@@ -15,8 +15,8 @@
 
 open HardCaml.Signal.Comb
 
-let base x = select x 15 11
-let offset x = select x 10 0
+let base x = x.[15:11]
+let offset x = x.[10:0]
 
 (* Addresses *)
 let sys_base       = consti 5 0

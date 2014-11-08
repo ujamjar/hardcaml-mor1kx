@@ -86,7 +86,7 @@ let pic o i =
   let spr_picmr =
     let nmi_mask x = 
       if o.pic_nmi_width = 0 then i.spr_dat_i
-      else select x 31 o.pic_nmi_width @: ones o.pic_nmi_width
+      else x.[31:o.pic_nmi_width] @: ones o.pic_nmi_width
     in
     R.reg 
       ~cv:(nmi_mask (zero 32))
