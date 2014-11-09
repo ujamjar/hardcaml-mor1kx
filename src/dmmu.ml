@@ -210,19 +210,28 @@ let dmmu o f i =
                 next Tlb_idle;
               ] [
 
-                (dtlb_trans_reload_din, 13) $==\ i.tlb_reload_data.[31:13];
-                (dtlb_trans_reload_din, 0) $==\
-                  (concat [
-                    i.tlb_reload_data.[7:7];
-                    vdd;
-                    i.tlb_reload_data.[7:7] &: i.tlb_reload_data.[6:6];
-                    i.tlb_reload_data.[6:6];
-                    i.tlb_reload_data.[5:0];
-                  ]);
+                dtlb_trans_reload_din $==
+                  List.fold_left (fun t (f,n) -> Utils.insert ~t ~f n)
+                  dtlb_trans_reload_din#q
+                  [
+                    i.tlb_reload_data.[31:13], 13;
+                    concat [
+                      i.tlb_reload_data.[7:7];
+                      vdd;
+                      i.tlb_reload_data.[7:7] &: i.tlb_reload_data.[6:6];
+                      i.tlb_reload_data.[6:6];
+                      i.tlb_reload_data.[5:0];
+                    ], 0;
+                  ];
                 dtlb_trans_reload_we $==. 1;
 
-                (dtlb_match_reload_din, 13) $==\ i.virt_addr_match.[31:13];
-                (dtlb_match_reload_din, 0) $==\ vdd;
+                dtlb_match_reload_din $==
+                  List.fold_left (fun t (f,n) -> Utils.insert ~t ~f n)
+                  dtlb_match_reload_din#q
+                  [
+                    i.virt_addr_match.[31:13], 13;
+                    vdd, 0;
+                  ];
                 dtlb_match_reload_we $==. 1;
 
                 next Tlb_read;

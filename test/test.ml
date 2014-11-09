@@ -134,6 +134,14 @@ end
 module Test_Dmmu = struct
   module X = Dmmu
   module G = Interface.Gen(Comb)(X.I)(X.O)
-  let circ,_,_,_ = G.make "pic" (X.dmmu Option.default_options Option.default_features)
+  let circ,_,_,_ = G.make "dmmu" (X.dmmu Option.default_options Option.default_features)
   let () = Rtl.Verilog.write print_string circ
 end
+
+module Test_Immu = struct
+  module X = Immu
+  module G = Interface.Gen(Comb)(X.I)(X.O)
+  let circ,_,_,_ = G.make "immu" (X.immu Option.default_options Option.default_features)
+  let () = Rtl.Verilog.write print_string circ
+end
+
