@@ -13,7 +13,7 @@
 
 open HardCaml.Signal.Comb
 
-let numways = 4
+let numways = 2
 let vwidth = numways * (numways-1) / 2
 
 module I = interface
