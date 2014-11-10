@@ -159,4 +159,11 @@ module Test_Dcache = struct
   let () = Rtl.Verilog.write print_string circ
 end
 
+module Test_Icache = struct
+  module X = Icache
+  module G = Interface.Gen(Comb)(X.I)(X.O)
+  let circ,_,_,_ = G.make "icache" (X.icache Option.default_options)
+  let () = Rtl.Verilog.write print_string circ
+end
+
 

@@ -107,6 +107,7 @@ let dcache o i =
   let tag_lru_msb = tagmem_width - 1 in
   let tag_lru_lsb = tag_lru_msb - tag_lru_width + 1 in
 
+(*
   Printf.printf "
   Options:
     OPTION_OPERAND_WIDTH = %i
@@ -143,8 +144,10 @@ let dcache o i =
     tagmem_width 
     tag_lru_msb 
     tag_lru_lsb;
+*)
 
-  (* WIRES *)
+  (************************************************)
+
   let snoop_dout = wire tagmem_width in
   let tag_dout = wire tagmem_width in
   let way_dout = Array.init o.Option.dcache_ways (fun _ -> wire operand_width) in
@@ -155,6 +158,7 @@ let dcache o i =
   let snoop_check = R.g_reg ~e:vdd 1 in
   let write_pending = R.g_reg ~e:vdd 1 in
   let tag_save_lru = R.g_reg ~e:vdd o.Option.dcache_ways in
+  let tag_way_save = Array.init o.Option.dcache_ways (fun _ -> R.g_reg ~e:vdd tagmem_way_width) in
   let refill_valid = R.g_reg ~e:vdd (1 lsl (o.Option.dcache_block_width-2)) in
   let refill_valid_r = R.g_reg ~e:vdd (1 lsl (o.Option.dcache_block_width-2)) in
   let invalidate_adr = R.g_reg ~e:vdd (way_width-o.Option.dcache_block_width) in
@@ -180,7 +184,7 @@ let dcache o i =
   let read = state_is Read in
   let write = state_is Write in
 
-  (* WORK *)
+  (************************************************)
 
   let snoop_index = i.snoop_adr.[way_width-1:o.Option.dcache_block_width] in
 
@@ -237,7 +241,6 @@ let dcache o i =
           }
     })
   in
-  let tag_way_save = Array.init o.Option.dcache_ways (fun _ -> R.g_reg ~e:vdd tagmem_way_width) in
 
   let way_reduce f x = Array.map x way |> Array.to_list |> reduce f in
   let way_vector x = Array.map x way |> Array.to_list |> List.rev |> concat in
@@ -290,34 +293,9 @@ let dcache o i =
   (* Acknowledge to the SPR bus. *)
   let spr_bus_ack = invalidate_ack#q in
 
-  let amap2 f a b = Array.init (Array.length a) (fun i -> f i a.(i) b.(i)) in
-
-  (*let () = compile [
-
-    (* registers *)
-    snoop_tag $==. 0; 
-    snoop_check $==. 0; 
-    write_pending $==. 0; 
-    tag_save_lru $==. 0; 
-    refill_valid $==. 0; 
-    refill_valid_r $==. 0; 
-    invalidate_adr $==. 0; 
-    snoop_windex $==. 0; 
-    sm [
-      Idle, [ next Read; ];
-      Read, [ next Write ];
-    ];
-
-    (* wires *)
-    g_proc @@ Array.to_list @@ Array.map (fun x -> x $==. 0) tag_way_in;
-    tag_lru_in $==. 0;
-    tag_we $==. 0;
-    way_we $==. 0;
-    access $==. 0;
-    way_wr_dat $==. 0;
-    invalidate_ack $==. 0;
-    tag_windex $==. 0;
-  ] in*)
+  let g_for len g = 
+    g_proc @@ Array.to_list @@ Array.init len (fun i -> g i)
+  in
 
   (*
    * Cache FSM
@@ -379,8 +357,8 @@ let dcache o i =
                on refill. Always one when only one way. *)
             tag_save_lru $== (if o.Option.dcache_ways=1 then vdd else lru);
 
-            g_proc (Array.to_list @@ amap2 
-              (fun i x y -> x $== y.Way.tag_way_out) tag_way_save way);
+            g_for (Array.length way) (fun i ->
+              tag_way_save.(i) $== way.(i).Way.tag_way_out);
 
             next Refill;
           ] @@ g_elif (i.cpu_we |: write_pending#q) [
@@ -438,7 +416,7 @@ let dcache o i =
   let () = compile [
     (* Default is to keep data, don't write and don't access *)
     tag_lru_in $== tag_lru_out;
-    g_proc (Array.to_list @@ amap2 (fun _ x y -> x $== y.Way.tag_way_out) tag_way_in way);
+    g_for (Array.length way) (fun i -> tag_way_in.(i) $== way.(i).Way.tag_way_out);
 
     tag_we $==. 0;
     way_we $==. 0;
@@ -454,12 +432,12 @@ let dcache o i =
       (* This is the write access *)
       tag_we $==. 1;
       tag_windex $== snoop_windex#q;
-      g_proc (Array.to_list @@ amap2 (fun _ x y ->
-        g_if y.Way.snoop.Snoop.way_hit [
-          x $==. 0;
+      g_for (Array.length way) (fun i ->
+        g_if way.(i).Way.snoop.Snoop.way_hit [
+          tag_way_in.(i) $==. 0;
         ] [
-          x $== y.Way.snoop.Snoop.way_out;
-        ]) tag_way_in way);
+          tag_way_in.(i) $== way.(i).Way.snoop.Snoop.way_out;
+        ]);
     ] [
       (* 
          The tag mem is written during reads and writes to write
@@ -528,10 +506,10 @@ let dcache o i =
 
             (* Invalidate the way on the first write *)
             g_when (refill_valid#q ==:. 0) [
-              g_proc (Array.to_list @@ amap2 (fun i x y ->
+              g_for (Array.length tag_way_in) (fun i ->
                 g_when tag_save_lru#q.[i:i] [
-                  x $== insert ~t:y.Way.tag_way_out ~f:gnd tagmem_way_valid; (* XXX YUK *)
-                ]) tag_way_in way);
+                  tag_way_in.(i) $== insert ~t:way.(i).Way.tag_way_out ~f:gnd tagmem_way_valid; 
+                ]);
               tag_we $==. 1;
             ];
 
@@ -541,14 +519,13 @@ let dcache o i =
              valid to 1.
             *)
             g_when (refill_done) [
-              g_proc (Array.to_list @@ Array.mapi
-                (fun i x ->
-                  g_proc [
-                    x $== tag_way_save.(i)#q;
-                    g_when tag_save_lru#q.[i:i] [
-                      x $== vdd @: tag_wtag;
-                    ];
-                  ]) tag_way_in);
+              g_for (Array.length tag_way_in) (fun i ->
+                g_proc [
+                  tag_way_in.(i) $== tag_way_save.(i)#q;
+                  g_when tag_save_lru#q.[i:i] [
+                    tag_way_in.(i) $== vdd @: tag_wtag;
+                  ];
+                ]);
               tag_lru_in $== next_lru_history;
 
               tag_we $==. 1;
@@ -561,15 +538,15 @@ let dcache o i =
 
           (* Lazy invalidation, invalidate everything that matches tag address *)
           tag_lru_in $==. 0;
-          (*for (w2 = 0; w2 < OPTION_DCACHE_WAYS; w2 = w2 + 1) [
-            tag_way_in[w2] = 0;
-          ]*)
+          g_for (Array.length tag_way_in) (fun i -> tag_way_in.(i) $==. 0);
 
           tag_we $==. 1;
         ];
       ]
     ]
   ] in
+
+  (************************************************)
 
   (* submodules *)
   let module Simple_tag = Ram.Simple_dp(struct
@@ -626,6 +603,8 @@ let dcache o i =
       way_dout.(i) <== way_data_ram.(i).Simple_way.O.dout
     done
   in
+
+  (************************************************)
 
   let snoop_hit = if o.Option.dcache_snoop then snoop_hit else gnd in
   let cpu_ack = ((read |: refill) &: hit &: (~: (write_pending#q)) |: refill_hit) &: 
