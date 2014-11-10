@@ -4,10 +4,13 @@
 
   Map of mor1kx verilog to ocaml modules 
 
+  mor1kx-defines.v                    -> Defines
+  mor1kx_utils.vh                     -> Utils (etc)
+  mor1kx-sprs.v                       -> Spr
   mor1kx_branch_prediction.v          -> Branch_prediction
   mor1kx_bus_if_avalon.v              -> Avalon
   mor1kx_bus_if_wb32.v                -> Wishbone
-  mor1kx_cache_lru.v
+  mor1kx_cache_lru.v                  -> Cache_lru
   mor1kx_cfgrs.v                      -> Cfgrs
   mor1kx_cpu_cappuccino.v
   mor1kx_cpu_espresso.v
@@ -16,30 +19,27 @@
   mor1kx_ctrl_cappuccino.v
   mor1kx_ctrl_espresso.v
   mor1kx_ctrl_prontoespresso.v
-  mor1kx_dcache.v
+  mor1kx_dcache.v                     -> Dcache
   mor1kx_decode_execute_cappuccino.v
   mor1kx_decode.v                     -> Decode
-  mor1kx-defines.v                    -> Defines
-  mor1kx_dmmu.v
+  mor1kx_dmmu.v                       -> Dmmu
   mor1kx_execute_alu.v                -> Execute_alu
   mor1kx_execute_ctrl_cappuccino.v
   mor1kx_fetch_cappuccino.v
   mor1kx_fetch_espresso.v
   mor1kx_fetch_prontoespresso.v
   mor1kx_fetch_tcm_prontoespresso.v
-  mor1kx_icache.v
-  mor1kx_immu.v
+  mor1kx_icache.v                     -> Icache
+  mor1kx_immu.v                       -> Immu
   mor1kx_lsu_cappuccino.v
   mor1kx_lsu_espresso.v               -> Lsu.Espresso
   mor1kx_pic.v                        -> Pic
   mor1kx_rf_cappuccino.v
   mor1kx_rf_espresso.v
   mor1kx_simple_dpram_sclk.v          -> Ram
-  mor1kx-sprs.v                       -> Spr
-  mor1kx_store_buffer.v
+  mor1kx_store_buffer.v               -> Store_buffer
   mor1kx_ticktimer.v                  -> Ticktimer
   mor1kx_true_dpram_sclk.v            -> Ram
-  mor1kx_utils.vh
   mor1kx.v
   mor1kx_wb_mux_cappuccino.v          -> Wb_mux.Cappuccino
   mor1kx_wb_mux_espresso.v            -> Wb_mux.Espresso
@@ -165,5 +165,14 @@ module Test_Icache = struct
   let circ,_,_,_ = G.make "icache" (X.icache Option.default_options)
   let () = Rtl.Verilog.write print_string circ
 end
+
+module Test_Store_buffer = struct
+  module X = Store_buffer
+  module G = Interface.Gen(Comb)(X.I)(X.O)
+  let circ,_,_,_ = G.make "store_buffer" (X.store_buffer ~depth_width:4)
+  let () = Rtl.Verilog.write print_string circ
+end
+
+
 
 
