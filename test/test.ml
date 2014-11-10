@@ -145,3 +145,11 @@ module Test_Immu = struct
   let () = Rtl.Verilog.write print_string circ
 end
 
+module Test_Cache_lru = struct
+  module X = Cache_lru
+  module G = Interface.Gen(Comb)(X.I)(X.O)
+  let circ,_,_,_ = G.make "cache_lru" (X.cache_lru)
+  let () = Rtl.Verilog.write print_string circ
+end
+
+
