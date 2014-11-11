@@ -8,17 +8,22 @@
 
 ***************************************************************************** *)
 
-module I : interface
-   clk rst cpu_adr cpu_dat_i cpu_req cpu_bsel
-   cpu_we cpu_burst avm_readdata avm_waitrequest
-   avm_readdatavalid
-end
+module Make(M : Utils.Module_cfg_signal) : sig
 
-module O : interface
-   cpu_err cpu_ack cpu_dat_o avm_address
-   avm_byteenable avm_read avm_burstcount
-   avm_write avm_writedata
-end
+  module I : interface
+    clk rst cpu_adr cpu_dat_i cpu_req cpu_bsel
+    cpu_we cpu_burst avm_readdata avm_waitrequest
+    avm_readdatavalid
+  end
 
-val avalon : burst_len:int -> HardCaml.Signal.Comb.t I.t -> HardCaml.Signal.Comb.t O.t
+  module O : interface
+    cpu_err cpu_ack cpu_dat_o avm_address
+    avm_byteenable avm_read avm_burstcount
+    avm_write avm_writedata
+  end
+
+  val avalon : burst_len:int -> M.Bits.t I.t -> M.Bits.t O.t
+  val avalon_inst : burst_len:int -> M.Bits.t I.t -> M.Bits.t O.t
+
+end
 

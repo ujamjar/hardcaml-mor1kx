@@ -15,32 +15,38 @@
 
  ******************************************************************************)
 
-open HardCaml.Signal.Comb
+module Make(M : Utils.Module_cfg) = struct
 
-module I = interface
-    (* Signals belonging to the stage where the branch is predicted. *)
-    op_bf[1] op_bnf[1] immjbr_upper[10]
-    (* Signals belonging to the stage where the branch is resolved. *)
-    prev_op_brcond[1] prev_predicted_flag[1] flag[1]
+  open M.Bits
+
+  module I = interface
+      (* Signals belonging to the stage where the branch is predicted. *)
+      op_bf[1] op_bnf[1] immjbr_upper[10]
+      (* Signals belonging to the stage where the branch is resolved. *)
+      prev_op_brcond[1] prev_predicted_flag[1] flag[1]
+  end
+
+  module O = interface
+      predicted_flag[1]
+      (* Branch misprediction indicator *)
+      branch_mispredict[1]
+  end
+
+  let branch_prediction i = 
+    let open I in
+    let immjbr_upper = bit i.immjbr_upper 9 in
+
+    (* Compare the real flag with the previously predicted flag and signal a
+      misprediction in case of a mismatch. *)
+    let branch_mispredict = i.prev_op_brcond &: (i.flag <>: i.prev_predicted_flag) in
+    (* Static branch prediction - backward branches are predicted as taken,
+        forward branches as not taken. *)
+    let predicted_flag = (i.op_bf &: immjbr_upper) |: (i.op_bnf &: ~: immjbr_upper) in
+
+    O.({ predicted_flag; branch_mispredict; })
+
+  module Inst = M.Inst(I)(O)
+  let branch_prediction_inst = Inst.inst "branch_prediction" branch_prediction 
+
 end
-
-module O = interface
-    predicted_flag[1]
-    (* Branch misprediction indicator *)
-    branch_mispredict[1]
-end
-
-let branch_prediction i = 
-  let open I in
-  let immjbr_upper = bit i.immjbr_upper 9 in
-
-  (* Compare the real flag with the previously predicted flag and signal a
-     misprediction in case of a mismatch. *)
-  let branch_mispredict = i.prev_op_brcond &: (i.flag <>: i.prev_predicted_flag) in
-   (* Static branch prediction - backward branches are predicted as taken,
-      forward branches as not taken. *)
-  let predicted_flag = (i.op_bf &: immjbr_upper) |: (i.op_bnf &: ~: immjbr_upper) in
-
-  O.({ predicted_flag; branch_mispredict; })
-
 

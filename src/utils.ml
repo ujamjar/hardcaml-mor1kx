@@ -14,42 +14,6 @@ open HardCaml.Signal.Comb
 
 (***********************************************************************)
 
-type spr_part = 
-  | VI of (int * int) * int
-  | BI of int * int
-  | BB of int * bool
-
-let mk_spr n l = 
-  let low = function
-    | VI((_,l),_) -> l
-    | BI(l,_) 
-    | BB(l,_) -> l
-  in
-  let l = List.sort (fun a b -> compare (low a) (low b)) l in
-  let (@:) a b = 
-    if a = HardCaml.Signal.Types.Signal_empty then b
-    else if b = HardCaml.Signal.Types.Signal_empty then a
-    else a @: b
-  in
-  let check t l p = if l <> p then 
-    raise (Failure (Printf.sprintf "name=%s[%s] l=%i pos=%i\n" n t l p)) in
-  let rec f pos = function
-    | [] -> empty
-    | VI((h,l),v)::t ->  
-      let w = h-l+1 in 
-      let _ = check "VI" l pos in
-      (consti w v) @: f (pos+w) t
-    | BI(l,v)::t ->
-      let _ = check "BI" l pos in
-      (consti 1 v) @: f (pos+1) t
-    | BB(l,v)::t ->
-      let _ = check "BB" l pos in
-      (if v then vdd else gnd) @: f (pos+1) t
-  in
-  uresize (f 0 l) 32
-
-(***********************************************************************)
-
 module Multiram = struct
   (* XXX can't remember if I tested this properly... *)
 
@@ -277,7 +241,7 @@ module type Spec = sig
     val ram_spec : HardCaml.Signal.Types.register
 end
 
-module type S = sig
+module type Seq = sig
 
     open HardCaml.Signal.Types
 
@@ -482,33 +446,101 @@ end)
 
 (***********************************************************************)
 
-let drop_bottom x n = select x (width x - 1) n
-let drop_top x n = select x (width x - 1 - n) 0
-let sel_bottom x n = select x (n-1) 0
-let sel_top x n = select x (width x - 1) (width x - n)
-let insert ~t ~f n = 
-  let wt, wf = width t, width f in
-  if n < 0 then failwith "insert <0"
-  else if wt < (wf + n) then failwith "insert overflow"
-  else if wt = wf && n = 0 then f
-  else if n=0 then select t (wt - 1) wf @: f
-  else if wt = (wf + n) then f @: select t (wt - wf - 1) 0
-  else select t (wt - 1) (wf + n) @: f @: select t (n-1) 0
+module Sel(B : HardCaml.Comb.S) = struct
+  open B
 
-let sel x (h,l) = select x h l
+  let drop_bottom x n = select x (width x - 1) n
+  let drop_top x n = select x (width x - 1 - n) 0
+  let sel_bottom x n = select x (n-1) 0
+  let sel_top x n = select x (width x - 1) (width x - n)
+  let insert ~t ~f n = 
+    let wt, wf = width t, width f in
+    if n < 0 then failwith "insert <0"
+    else if wt < (wf + n) then failwith "insert overflow"
+    else if wt = wf && n = 0 then f
+    else if n=0 then select t (wt - 1) wf @: f
+    else if wt = (wf + n) then f @: select t (wt - wf - 1) 0
+    else select t (wt - 1) (wf + n) @: f @: select t (n-1) 0
 
-let cases sel default l = 
-  let max = 1 + List.fold_left (fun acc (i,_) -> max i acc) 0 l in
-  let a = Array.make max default in
-  let () = List.iter (fun (i,x) -> a.(i) <- x) l in
-  if 1 lsl (width sel) = max then
-    mux sel (Array.to_list a)
-  else
-    mux sel (Array.to_list a @ [default])
+  let sel x (h,l) = select x h l
+
+  let cases sel default l = 
+    let max = 1 + List.fold_left (fun acc (i,_) -> max i acc) 0 l in
+    let a = Array.make max default in
+    let () = List.iter (fun (i,x) -> a.(i) <- x) l in
+    if 1 lsl (width sel) = max then
+      mux sel (Array.to_list a)
+    else
+      mux sel (Array.to_list a @ [default])
+
+end
 
 let g_elif c t f = HardCaml.Signal.Guarded.([ g_if c t f ])
 
 let ($==\) (x, l) y = 
-  HardCaml.Signal.Guarded.( x $== insert x#q y l )
+  let module S = Sel(HardCaml.Signal.Comb) in
+  HardCaml.Signal.Guarded.( x $== S.insert x#q y l )
 
+
+(***********************************************************************)
+
+module type Module_cfg = sig
+  val o : Option.options
+  val f : Option.features
+  module Bits : HardCaml.Comb.S
+  module Inst(I : HardCaml.Interface.S)(O : HardCaml.Interface.S) : sig
+    val inst : string -> (Bits.t I.t -> Bits.t O.t) -> Bits.t I.t -> Bits.t O.t
+  end
+  module Spr : module type of Spr.Make(Bits)
+end
+
+module type Module_cfg_signal = Module_cfg with type Bits.t = HardCaml.Signal.Comb.t
+
+module type Inst_db = sig 
+  val db : HardCaml.Circuit.Hierarchy.database 
+end
+
+module Inst_flat(I : HardCaml.Interface.S)(O : HardCaml.Interface.S) = struct
+  let inst _ f i = f i
+end
+
+module Inst_hier(Db : Inst_db)(I : HardCaml.Interface.S)(O : HardCaml.Interface.S) = struct
+  module Inst = HardCaml.Interface.Hier(I)(O)
+  let inst name f i = 
+    let _ = I.(map2 (fun (n,b) x -> 
+      if width x <> b then failwith (name ^ ": input " ^ n ^ " expected " ^ 
+        string_of_int b ^ " bits, but got " ^ string_of_int (width x) ^ " bits")) t i);
+    in
+    let o = Inst.make Db.db name f i in
+    let _ = O.(map2 (fun (n,b) x -> 
+      if width x <> b then failwith (name ^ ": output " ^ n ^ " expected " ^ 
+        string_of_int b ^ " bits, but got " ^ string_of_int (width x) ^ " bits")) t o);
+    in
+    o
+
+end
+
+module Module_hier(Db : Inst_db) = struct
+  let o = Option.default_options
+  let f = Option.default_features
+  module Bits = HardCaml.Signal.Comb
+  module Inst = Inst_hier(Db)
+  module Spr = Spr.Make(Bits)
+end
+
+module Module_flat = struct
+  let o = Option.default_options
+  let f = Option.default_features
+  module Bits = HardCaml.Signal.Comb
+  module Inst = Inst_flat
+  module Spr = Spr.Make(Bits)
+end
+
+module Module_comb = struct
+  let o = Option.default_options
+  let f = Option.default_features
+  module Bits = HardCaml.Bits.Comb.IntbitsList
+  module Inst = Inst_flat
+  module Spr = Spr.Make(Bits)
+end
 

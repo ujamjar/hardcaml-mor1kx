@@ -13,8 +13,6 @@
 
 ***************************************************************************** *)
 
-open HardCaml.Signal.Comb
-
 (* ORBIS32 opcodes - top 6 bits *)
 
 let insn_width = 32
@@ -145,35 +143,36 @@ module Opcode = struct
 end
 
 (* Exception addresses *)
-let reset_vector    = consti 5 0x01
-let berr_vector     = consti 5 0x02
-let dpf_vector      = consti 5 0x03
-let ipf_vector      = consti 5 0x04
-let tt_vector       = consti 5 0x05
-let align_vector    = consti 5 0x06
-let illegal_vector  = consti 5 0x07
-let int_vector      = consti 5 0x08
-let dtlb_vector     = consti 5 0x09
-let itlb_vector     = consti 5 0x0A
-let range_vector    = consti 5 0x0B
-let syscall_vector  = consti 5 0x0C
-let fp_vector       = consti 5 0x0D
-let trap_vector     = consti 5 0x0E
+let vector_select   = 5+8,8
+let reset_vector    = 0x01
+let berr_vector     = 0x02
+let dpf_vector      = 0x03
+let ipf_vector      = 0x04
+let tt_vector       = 0x05
+let align_vector    = 0x06
+let illegal_vector  = 0x07
+let int_vector      = 0x08
+let dtlb_vector     = 0x09
+let itlb_vector     = 0x0A
+let range_vector    = 0x0B
+let syscall_vector  = 0x0C
+let fp_vector       = 0x0D
+let trap_vector     = 0x0E
 
 (* Whether we'll allow things using AYNC reset to have it:
-   define OR_ASYNC_RST or posedge rst *)
+  define OR_ASYNC_RST or posedge rst *)
 (*let or_async_rst *)
 
 (* Implementation version defines *)
-let mor1kx_cpuid = consti 8 0x01
+let mor1kx_cpuid = 0x01
 (* mor1kx breaks up the VR2 version register to be 3 8-bit fields
-   MSB is major version, middle byte is minor version number
-   and final byte is the pipeline identifier *)
-let mor1kx_version_major = consti 8 3
-let mor1kx_version_minor = consti 8 0
+  MSB is major version, middle byte is minor version number
+  and final byte is the pipeline identifier *)
+let mor1kx_version_major = 3
+let mor1kx_version_minor = 0
 
 (* mor1kx implementation-specific register definitions *)
-let mor1kx_pipeid_cappuccino = consti 8 1
-let mor1kx_pipeid_espresso   = consti 8 2
-let mor1kx_pipeid_prontoespresso = consti 8 3
+let mor1kx_pipeid_cappuccino = 1
+let mor1kx_pipeid_espresso   = 2
+let mor1kx_pipeid_prontoespresso = 3
 

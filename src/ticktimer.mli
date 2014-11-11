@@ -8,14 +8,18 @@
 
 ***************************************************************************** *)
 
-module I : interface
-   clk rst
-   spr_access spr_we spr_addr spr_dat_i
+module Make(M : Utils.Module_cfg_signal) : sig
+
+  module I : interface
+    clk rst
+    spr_access spr_we spr_addr spr_dat_i
+  end
+
+  module O : interface
+    spr_ttmr spr_ttcr spr_bus_ack spr_dat_o
+  end
+
+  val ticktimer : M.Bits.t I.t -> M.Bits.t O.t
+  val ticktimer_inst : M.Bits.t I.t -> M.Bits.t O.t
+
 end
-
-module O : interface
-   spr_ttmr spr_ttcr spr_bus_ack spr_dat_o
-end
-
-val ticktimer : HardCaml.Signal.Comb.t I.t -> HardCaml.Signal.Comb.t O.t
-

@@ -8,13 +8,6 @@
 
 ***************************************************************************** *)
 
-type spr_part = 
-  | VI of (int * int) * int
-  | BI of int * int
-  | BB of int * bool
-
-val mk_spr : string -> spr_part list -> HardCaml.Signal.Comb.t
-
 module Multiram : sig
   open HardCaml.Signal.Types
   open HardCaml.Signal.Comb
@@ -63,7 +56,7 @@ module type Spec = sig
     val ram_spec : HardCaml.Signal.Types.register
 end
 
-module type S = sig
+module type Seq = sig
 
     open HardCaml.Signal.Types
 
@@ -145,22 +138,23 @@ module type S = sig
 
 end
 
-module Make_seq(S : Spec) : S
+module Make_seq(S : Spec) : Seq
 
 module Regs(S : sig 
   val clk : HardCaml.Signal.Comb.t
   val rst : HardCaml.Signal.Comb.t
-end) : S
+end) : Seq
 
-val drop_bottom : HardCaml.Signal.Comb.t -> int -> HardCaml.Signal.Comb.t
-val drop_top : HardCaml.Signal.Comb.t -> int -> HardCaml.Signal.Comb.t
-val sel_bottom : HardCaml.Signal.Comb.t -> int -> HardCaml.Signal.Comb.t
-val sel_top : HardCaml.Signal.Comb.t -> int -> HardCaml.Signal.Comb.t
-val insert : t:HardCaml.Signal.Comb.t -> f:HardCaml.Signal.Comb.t -> int -> HardCaml.Signal.Comb.t
-val sel : HardCaml.Signal.Comb.t -> (int * int) -> HardCaml.Signal.Comb.t
+module Sel(B : HardCaml.Comb.S) : sig
+  val drop_bottom : B.t -> int -> B.t
+  val drop_top : B.t -> int -> B.t
+  val sel_bottom : B.t -> int -> B.t
+  val sel_top : B.t -> int -> B.t
+  val insert : t:B.t -> f:B.t -> int -> B.t
+  val sel : B.t -> (int * int) -> B.t
+  val cases : B.t -> B.t -> (int * B.t) list -> B.t
+end
 
-val cases : HardCaml.Signal.Comb.t -> HardCaml.Signal.Comb.t ->
-  (int * HardCaml.Signal.Comb.t) list -> HardCaml.Signal.Comb.t
 
 val g_elif : HardCaml.Signal.Comb.t ->
   HardCaml.Signal.Guarded.statement list ->
@@ -170,4 +164,24 @@ val g_elif : HardCaml.Signal.Comb.t ->
 val ($==\) :
   HardCaml.Signal.Guarded.variable * int -> 
   HardCaml.Signal.Types.signal -> HardCaml.Signal.Guarded.statement
+
+module type Module_cfg = sig
+  val o : Option.options
+  val f : Option.features
+  module Bits : HardCaml.Comb.S
+  module Inst(I : HardCaml.Interface.S)(O : HardCaml.Interface.S) : sig
+    val inst : string -> (Bits.t I.t -> Bits.t O.t) -> Bits.t I.t -> Bits.t O.t
+  end
+  module Spr : module type of Spr.Make(Bits)
+end
+
+module type Module_cfg_signal = Module_cfg with type Bits.t = HardCaml.Signal.Comb.t
+
+module type Inst_db = sig 
+  val db : HardCaml.Circuit.Hierarchy.database 
+end
+
+module Module_hier(Db : Inst_db) : Module_cfg_signal
+module Module_flat : Module_cfg with type Bits.t = HardCaml.Signal.Comb.t
+module Module_comb : Module_cfg with type Bits.t = HardCaml.Bits.Comb.IntbitsList.t
 

@@ -8,33 +8,37 @@
 
  ******************************************************************************)
 
-module I : interface
-  clk
-  rst
-  ic_access
-  cpu_adr
-  cpu_adr_match
-  cpu_req
-  wradr
-  wrdat
-  we
-  spr_bus_addr
-  spr_bus_we
-  spr_bus_stb
-  spr_bus_dat_i
+module Make(M : Utils.Module_cfg_signal) : sig
+
+  module I : interface
+    clk
+    rst
+    ic_access
+    cpu_adr
+    cpu_adr_match
+    cpu_req
+    wradr
+    wrdat
+    we
+    spr_bus_addr
+    spr_bus_we
+    spr_bus_stb
+    spr_bus_dat_i
+  end
+
+
+  module O : interface
+    refill
+    refill_req
+    refill_done
+    invalidate
+    cpu_ack
+    cpu_dat
+    spr_bus_dat_o
+    spr_bus_ack
+  end
+
+  val icache : M.Bits.t I.t -> M.Bits.t O.t
+  val icache_inst : M.Bits.t I.t -> M.Bits.t O.t
+
 end
-
-
-module O : interface
-  refill
-  refill_req
-  refill_done
-  invalidate
-  cpu_ack
-  cpu_dat
-  spr_bus_dat_o
-  spr_bus_ack
-end
-
-val icache : Option.options -> HardCaml.Signal.Comb.t I.t -> HardCaml.Signal.Comb.t O.t
-

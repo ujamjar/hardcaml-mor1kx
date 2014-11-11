@@ -9,16 +9,25 @@
 
  ******************************************************************************)
 
-module I : interface
-  current
-  access
+module type S = sig 
+  val numways : int
 end
 
-module O : interface
-  update
-  lru_pre
-  lru_post
-end
+module Make(S : S)(M : Utils.Module_cfg) : sig
 
-val cache_lru : HardCaml.Signal.Comb.t I.t -> HardCaml.Signal.Comb.t O.t
+  module I : interface
+    current
+    access
+  end
+
+  module O : interface
+    update
+    lru_pre
+    lru_post
+  end
+
+  val cache_lru : M.Bits.t I.t -> M.Bits.t O.t
+  val cache_lru_inst : M.Bits.t I.t -> M.Bits.t O.t
+
+end
 

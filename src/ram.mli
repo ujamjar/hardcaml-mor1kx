@@ -13,7 +13,7 @@ module type S = sig
   val data_width : int
 end
 
-module Simple_dp(S : S) : sig
+module Simple_dp(S : S)(M : Utils.Module_cfg_signal) : sig
 
   module I : interface
     clk
@@ -26,13 +26,12 @@ module Simple_dp(S : S) : sig
     dout
   end
 
-  val ram : enable_bypass:bool -> 
-    HardCaml.Signal.Comb.t I.t ->
-    HardCaml.Signal.Comb.t O.t
+  val ram : enable_bypass:bool -> M.Bits.t I.t -> M.Bits.t O.t
+  val ram_inst : enable_bypass:bool -> M.Bits.t I.t -> M.Bits.t O.t
 
 end
 
-module True_dp(S : S) : sig
+module True_dp(S : S)(M : Utils.Module_cfg_signal) : sig
   
   module I : interface
     clk
@@ -44,9 +43,8 @@ module True_dp(S : S) : sig
     dout_a dout_b
   end
 
-  val ram : 
-    HardCaml.Signal.Comb.t I.t ->
-    HardCaml.Signal.Comb.t O.t
+  val ram : M.Bits.t I.t -> M.Bits.t O.t
+  val ram_inst : M.Bits.t I.t -> M.Bits.t O.t
 
 end
 

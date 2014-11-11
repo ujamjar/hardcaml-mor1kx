@@ -8,11 +8,16 @@
 
 ***************************************************************************** *)
 
-module O : interface
-    vr vr2 upr cpucfgr dmmucfgr immucfgr
-    dccfgr iccfgr dcfgr pccfgr fpcsr avr
+module Make(M : Utils.Module_cfg) : sig
+
+  module I : HardCaml.Interface.S
+
+  module O : interface
+      vr vr2 upr cpucfgr dmmucfgr immucfgr
+      dccfgr iccfgr dcfgr pccfgr fpcsr avr
+  end
+
+  val cfgrs : M.Bits.t I.t -> M.Bits.t O.t
+  val cfgrs_inst : M.Bits.t I.t -> M.Bits.t O.t
+
 end
-
-val cfgrs : Option.options -> Option.features -> HardCaml.Signal.Comb.t O.t
-
-

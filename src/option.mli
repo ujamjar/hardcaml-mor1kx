@@ -61,7 +61,7 @@ type options =
     rf_num_shadow_gpr        : int;
     rf_addr_width            : int;
     rf_words                 : int;
-    reset_pc                 : HardCaml.Signal.Comb.t;
+    reset_pc                 : int;
     tcm_fetcher              : bool;
     shifter                  : shifter;
     store_buffer_depth_width : int;

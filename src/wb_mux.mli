@@ -10,34 +10,44 @@
 
 module Cappuccino : sig
 
-  module I : interface
-    clk rst
-    alu_result lsu_result mul_result
-    op_mul op_lsu_load 
-  end
+  module Make(M : Utils.Module_cfg_signal) : sig
 
-  module O : interface
-    rf_result
-  end
+    module I : interface
+      clk rst
+      alu_result lsu_result mul_result
+      op_mul op_lsu_load 
+    end
 
-  val wb_mux : HardCaml.Signal.Comb.t I.t -> HardCaml.Signal.Comb.t O.t
+    module O : interface
+      rf_result
+    end
+
+    val wb_mux : M.Bits.t I.t -> M.Bits.t O.t
+    val wb_mux_inst : M.Bits.t I.t -> M.Bits.t O.t
+
+  end
 
 end
 
 module Espresso : sig
 
-  module I : interface
-   alu_result lsu_result
-   pc_fetch_next
-   spr
-   op_jal op_lsu_load op_mfspr
-  end
+  module Make(M : Utils.Module_cfg) : sig
 
-  module O : interface
-   rf_result
-  end
+    module I : interface
+    alu_result lsu_result
+    pc_fetch_next
+    spr
+    op_jal op_lsu_load op_mfspr
+    end
 
-  val wb_mux : HardCaml.Signal.Comb.t I.t -> HardCaml.Signal.Comb.t O.t
+    module O : interface
+    rf_result
+    end
+
+    val wb_mux : M.Bits.t I.t -> M.Bits.t O.t
+    val wb_mux_inst : M.Bits.t I.t -> M.Bits.t O.t
+  
+  end
 
 end
 

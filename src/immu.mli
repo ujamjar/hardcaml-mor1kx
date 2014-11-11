@@ -8,39 +8,42 @@
 
  ******************************************************************************)
 
-module I : interface
-  clk
-  rst
-  enable
-  virt_addr
-  virt_addr_match
-  op_store
-  op_load
-  supervisor_mode
-  tlb_reload_ack
-  tlb_reload_data
-  tlb_reload_pagefault_clear
-  spr_bus_addr
-  spr_bus_we
-  spr_bus_stb
-  spr_bus_dat_i
+module Make(M : Utils.Module_cfg_signal) : sig
+  
+  module I : interface
+    clk
+    rst
+    enable
+    virt_addr
+    virt_addr_match
+    op_store
+    op_load
+    supervisor_mode
+    tlb_reload_ack
+    tlb_reload_data
+    tlb_reload_pagefault_clear
+    spr_bus_addr
+    spr_bus_we
+    spr_bus_stb
+    spr_bus_dat_i
+  end
+
+  module O : interface
+    busy
+    phys_addr
+    cache_inhibit
+    tlb_miss
+    pagefault
+    tlb_reload_req
+    tlb_reload_busy
+    tlb_reload_addr
+    tlb_reload_pagefault
+    spr_bus_dat_o
+    spr_bus_ack
+    redundant
+  end
+
+  val immu : M.Bits.t I.t -> M.Bits.t O.t 
+  val immu_inst : M.Bits.t I.t -> M.Bits.t O.t 
+
 end
-
-module O : interface
-  busy
-  phys_addr
-  cache_inhibit
-  tlb_miss
-  pagefault
-  tlb_reload_req
-  tlb_reload_busy
-  tlb_reload_addr
-  tlb_reload_pagefault
-  spr_bus_dat_o
-  spr_bus_ack
-  redundant
-end
-
-val immu : Option.options -> Option.features ->
-  HardCaml.Signal.Comb.t I.t -> HardCaml.Signal.Comb.t O.t 
-

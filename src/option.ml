@@ -10,8 +10,6 @@
 
 ***************************************************************************** *)
 
-open HardCaml.Signal.Comb
-
 type cpu = 
   | Cappuccino
   | Espresso
@@ -65,7 +63,7 @@ type options =
     rf_num_shadow_gpr        : int;
     rf_addr_width            : int;
     rf_words                 : int;
-    reset_pc                 : HardCaml.Signal.Comb.t;
+    reset_pc                 : int;
     tcm_fetcher              : bool;
     shifter                  : shifter;
     store_buffer_depth_width : int;
@@ -142,7 +140,7 @@ let default_options =
     rf_num_shadow_gpr         = 0;
     rf_addr_width             = 5;
     rf_words                  = 32;
-    reset_pc                  = uresize (Defines.reset_vector @: zero 8) 32; (* operand width *)
+    reset_pc                  = Defines.reset_vector lsl (snd Defines.vector_select);
     tcm_fetcher               = false;
     shifter                   = Shifter_barrel;
     store_buffer_depth_width  = 8;

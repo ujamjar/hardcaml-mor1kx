@@ -1,7 +1,7 @@
 <src/*.{ml,mli}>: syntax(camlp4o), package(hardcaml,hardcaml.syntax,deriving)
 <test/*.{ml,mli}>: syntax(camlp4o), package(hardcaml,hardcaml.syntax,deriving)
 
-<test/*.byte>: package(hardcaml,deriving)
+<test/*.{byte,native}>: package(hardcaml,deriving)
 
 <src>: include
 <test>: include

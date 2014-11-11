@@ -12,77 +12,83 @@
 
 ***************************************************************************** *)
 
-open HardCaml.Signal.Comb
-open Utils
+module Make(M : Utils.Module_cfg_signal) = struct
 
-module I = interface
-   clk[1]
-   rst[1]
-   cpu_adr[32]
-   cpu_dat_i[32]
-   cpu_req[1]
-   cpu_bsel[4]
-   cpu_we[1]
-   cpu_burst[1]
-   avm_readdata[32]
-   avm_waitrequest[1]
-   avm_readdatavalid[1]
-end
+  open M.Bits
+  open Utils
 
-module O = interface
-   cpu_err[1]
-   cpu_ack[1]
-   cpu_dat_o[32]
-   avm_address[32]
-   avm_byteenable[4]
-   avm_read[1]
-   avm_burstcount[4]
-   avm_write[1]
-   avm_writedata[32]
-end
+  module I = interface
+    clk[1]
+    rst[1]
+    cpu_adr[32]
+    cpu_dat_i[32]
+    cpu_req[1]
+    cpu_bsel[4]
+    cpu_we[1]
+    cpu_burst[1]
+    avm_readdata[32]
+    avm_waitrequest[1]
+    avm_readdatavalid[1]
+  end
 
-type states = Idle | Read | Burst | Write deriving(Enum,Bounded)
+  module O = interface
+    cpu_err[1]
+    cpu_ack[1]
+    cpu_dat_o[32]
+    avm_address[32]
+    avm_byteenable[4]
+    avm_read[1]
+    avm_burstcount[4]
+    avm_write[1]
+    avm_writedata[32]
+  end
 
-let avalon ~burst_len i = 
-  let open I in
-  let open HardCaml.Signal.Guarded in
-  let module R = Regs(struct let clk = i.clk let rst = i.rst end) in
+  type states = Idle | Read | Burst | Write deriving(Enum,Bounded)
 
-  let state_is, sm, next = R.statemachine vdd 
-    (Enum_states.enum_from_to Bounded_states.min_bound Bounded_states.max_bound)
-  in
+  let avalon ~burst_len i = 
+    let open I in
+    let open HardCaml.Signal.Guarded in
+    let module R = Regs(struct let clk = i.clk let rst = i.rst end) in
 
-  let () = compile [
+    let state_is, sm, next = R.statemachine vdd 
+      (Enum_states.enum_from_to Bounded_states.min_bound Bounded_states.max_bound)
+    in
 
-    sm [
+    let () = compile [
 
-      Idle, [
-        g_when (i.cpu_req &: (~: (i.avm_waitrequest))) [
-          g_if i.cpu_we [ next Write; ] @@ 
-          g_elif i.cpu_burst [ next Burst; ] 
-          [ next Read; ];
+      sm [
+
+        Idle, [
+          g_when (i.cpu_req &: (~: (i.avm_waitrequest))) [
+            g_if i.cpu_we [ next Write; ] @@ 
+            g_elif i.cpu_burst [ next Burst; ] 
+            [ next Read; ];
+          ];
         ];
+        Read, [ g_when i.avm_readdatavalid [ next Idle; ]; ];
+        Burst, [ g_when (~: (i.cpu_burst) &: i.avm_readdatavalid) [ next Idle; ] ];
+        Write, [ next Idle; ];
+
       ];
-      Read, [ g_when i.avm_readdatavalid [ next Idle; ]; ];
-      Burst, [ g_when (~: (i.cpu_burst) &: i.avm_readdatavalid) [ next Idle; ] ];
-      Write, [ next Idle; ];
 
-    ];
+    ] in
 
-  ] in
+    O.({
+      cpu_err = gnd;
+      cpu_ack = i.avm_readdatavalid |: state_is Write;
+      cpu_dat_o = i.avm_readdata;
+      avm_address = i.cpu_adr;
+      avm_byteenable = i.cpu_bsel;
+      avm_read = i.cpu_req &: (~: (i.cpu_we)) &: state_is Idle;
+      avm_burstcount = 
+        mux2 (i.cpu_burst &: ~: (state_is Burst)) 
+          (consti 4 burst_len) (consti 4 1);
+      avm_write = i.cpu_req &: i.cpu_we &: state_is Idle;
+      avm_writedata = i.cpu_dat_i;
+    })
 
-  O.({
-    cpu_err = gnd;
-    cpu_ack = i.avm_readdatavalid |: state_is Write;
-    cpu_dat_o = i.avm_readdata;
-    avm_address = i.cpu_adr;
-    avm_byteenable = i.cpu_bsel;
-    avm_read = i.cpu_req &: (~: (i.cpu_we)) &: state_is Idle;
-    avm_burstcount = 
-      mux2 (i.cpu_burst &: ~: (state_is Burst)) 
-        (consti 4 burst_len) (consti 4 1);
-    avm_write = i.cpu_req &: i.cpu_we &: state_is Idle;
-    avm_writedata = i.cpu_dat_i;
-  })
+  module Inst = M.Inst(I)(O)
+  let avalon_inst ~burst_len = Inst.inst "avalon" (avalon ~burst_len)
 
+end
 

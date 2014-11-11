@@ -138,25 +138,27 @@ module Opcode : sig
 
 end
 
-val reset_vector : HardCaml.Signal.Comb.t
-val berr_vector : HardCaml.Signal.Comb.t
-val dpf_vector : HardCaml.Signal.Comb.t
-val ipf_vector : HardCaml.Signal.Comb.t
-val tt_vector : HardCaml.Signal.Comb.t
-val align_vector : HardCaml.Signal.Comb.t
-val illegal_vector : HardCaml.Signal.Comb.t
-val int_vector : HardCaml.Signal.Comb.t
-val dtlb_vector : HardCaml.Signal.Comb.t
-val itlb_vector : HardCaml.Signal.Comb.t
-val range_vector : HardCaml.Signal.Comb.t
-val syscall_vector : HardCaml.Signal.Comb.t
-val fp_vector : HardCaml.Signal.Comb.t
-val trap_vector : HardCaml.Signal.Comb.t
+val vector_select : int * int
+val reset_vector : int
+val berr_vector : int
+val dpf_vector : int
+val ipf_vector : int
+val tt_vector : int
+val align_vector : int
+val illegal_vector : int
+val int_vector : int
+val dtlb_vector : int
+val itlb_vector : int
+val range_vector : int
+val syscall_vector : int
+val fp_vector : int
+val trap_vector : int
 
-val mor1kx_cpuid : HardCaml.Signal.Comb.t
-val mor1kx_version_major : HardCaml.Signal.Comb.t
-val mor1kx_version_minor : HardCaml.Signal.Comb.t
-val mor1kx_pipeid_cappuccino : HardCaml.Signal.Comb.t
-val mor1kx_pipeid_espresso : HardCaml.Signal.Comb.t
-val mor1kx_pipeid_prontoespresso : HardCaml.Signal.Comb.t
+val mor1kx_cpuid : int
+val mor1kx_version_major : int
+val mor1kx_version_minor : int
+val mor1kx_pipeid_cappuccino : int
+val mor1kx_pipeid_espresso : int
+val mor1kx_pipeid_prontoespresso : int
+
 

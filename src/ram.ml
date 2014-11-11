@@ -12,14 +12,14 @@
 
 ***************************************************************************** *)
 
-open HardCaml.Signal.Comb
-
 module type S = sig
   val addr_width : int
   val data_width : int
 end
 
-module Simple_dp(S : S) = struct
+module Simple_dp(S : S)(M : Utils.Module_cfg_signal) = struct
+
+  open M.Bits
 
   module I = interface
     clk[1]
@@ -47,10 +47,14 @@ module Simple_dp(S : S) = struct
     in
     O.({ dout })
 
+  module Inst = M.Inst(I)(O)
+  let ram_inst ~enable_bypass = Inst.inst "ram_simple_dp" (ram ~enable_bypass)
 end
 
-module True_dp(S : S) = struct
-  
+module True_dp(S : S)(M : Utils.Module_cfg_signal) = struct
+ 
+  open M.Bits
+
   module I = interface
     clk[1]
     addr_a[S.addr_width] we_a[1] din_a[S.data_width]
@@ -84,5 +88,7 @@ module True_dp(S : S) = struct
       dout_b = dout.(1);
     })
 
+  module Inst = M.Inst(I)(O)
+  let ram_inst = Inst.inst "ram_true_dp" ram 
 end
 
