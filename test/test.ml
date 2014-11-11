@@ -35,7 +35,7 @@
   mor1kx_lsu_espresso.v               -> Lsu.Espresso
   mor1kx_pic.v                        -> Pic
   mor1kx_rf_cappuccino.v
-  mor1kx_rf_espresso.v
+  mor1kx_rf_espresso.v                -> Rf.Espresso
   mor1kx_simple_dpram_sclk.v          -> Ram
   mor1kx_store_buffer.v               -> Store_buffer
   mor1kx_ticktimer.v                  -> Ticktimer
@@ -131,6 +131,13 @@ module Test_Lsu_espresso = struct
   let () = Rtl.Verilog.write print_string circ
 end
 
+(*module Test_Lsu_cappuccino = struct
+  module X = Lsu.Cappuccino
+  module G = Interface.Gen(Comb)(X.I)(X.O)
+  let circ,_,_,_ = G.make "lsu_cappuccino" (X.lsu ~registered_io:false)
+  let () = Rtl.Verilog.write print_string circ
+end*)
+
 module Test_Dmmu = struct
   module X = Dmmu
   module G = Interface.Gen(Comb)(X.I)(X.O)
@@ -173,6 +180,12 @@ module Test_Store_buffer = struct
   let () = Rtl.Verilog.write print_string circ
 end
 
+module Test_Rf_espresso = struct
+  module X = Rf.Espresso
+  module G = Interface.Gen(Comb)(X.I)(X.O)
+  let circ,_,_,_ = G.make "rf_espresso" (X.rf)
+  let () = Rtl.Verilog.write print_string circ
+end
 
 
 

@@ -19,3 +19,4 @@ Cache_lru
 Dcache
 Icache
 Store_buffer
+Rf
