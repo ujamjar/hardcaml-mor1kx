@@ -1,6 +1,7 @@
 #directory "_build/src";;
-#require "hardcaml,deriving";;
+#require "hardcaml,hardcaml.syntax,deriving";;
 #load "openrisc.cma";;
 
-module B = HardCaml.Bits.Comb.IntbitsList
-
+open HardCaml
+module B = Bits.Comb.IntbitsList
+module S = Signal.Comb
