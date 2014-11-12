@@ -111,6 +111,9 @@ module Cappuccino : sig
       dbus_burst
     end
 
+    val lsu : M.Bits.t I.t -> M.Bits.t O.t
+    val lsu_inst : M.Bits.t I.t -> M.Bits.t O.t
+
   end
 
 end

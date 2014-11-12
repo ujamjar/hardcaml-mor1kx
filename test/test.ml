@@ -150,8 +150,14 @@ module Test_Lsu_espresso = struct
   let () = HardCaml.Rtl.Verilog.write print_string circ
 end
 
-(*module Test_Lsu_cappuccino = struct
-end*)
+module Test_Lsu_cappuccino = struct
+  module M = Utils.Module_flat
+  module X = Lsu.Cappuccino.Make(M)
+  module G = HardCaml.Interface.Circ(X.I)(X.O)
+  let name = "lsu_cappuccino"
+  let circ = G.make name (X.lsu)
+  let () = HardCaml.Rtl.Verilog.write print_string circ
+end
 
 module Test_Dmmu = struct
   module M = Utils.Module_flat

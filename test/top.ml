@@ -47,8 +47,11 @@ let top i =
   let module X = Pic.Make(M) in
   let o = o |: outp X.O.(to_list (X.pic_inst (X.I.(map inp t)))) in
 
-  let module X = Lsu.Espresso.Make(M) in
-  let o = o |: outp X.O.(to_list (X.lsu_inst ~registered_io:false (X.I.(map inp t)))) in
+  (*let module X = Lsu.Espresso.Make(M) in
+  let o = o |: outp X.O.(to_list (X.lsu_inst ~registered_io:false (X.I.(map inp t)))) in*)
+
+  let module X = Lsu.Cappuccino.Make(M) in
+  let o = o |: outp X.O.(to_list (X.lsu_inst (X.I.(map inp t)))) in
 
   let module X = Dmmu.Make(M) in
   let o = o |: outp X.O.(to_list (X.dmmu_inst (X.I.(map inp t)))) in
@@ -65,7 +68,10 @@ let top i =
   let module X = Store_buffer.Make(M) in
   let o = o |: outp X.O.(to_list (X.store_buffer_inst ~depth_width:4 (X.I.(map inp t)))) in
 
-  let module X = Rf.Espresso.Make(M) in
+  (*let module X = Rf.Espresso.Make(M) in
+  let o = o |: outp X.O.(to_list (X.rf_inst (X.I.(map inp t)))) in*)
+
+  let module X = Rf.Cappuccino.Make(M) in
   let o = o |: outp X.O.(to_list (X.rf_inst (X.I.(map inp t)))) in
 
   O.{ o }
