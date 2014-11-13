@@ -39,6 +39,7 @@ module Tcm_pronto_espresso = struct
                Andy Ray <andy.ray@ujamjar.com>
 
   ***************************************************************************** *)
+
   module Make(M : Utils.Module_cfg_signal) = struct
     
     module L = Utils.Logic(M.Bits)
@@ -356,6 +357,29 @@ module Tcm_pronto_espresso = struct
 end
 
 module Pronto_espresso = struct
+
+  (* ****************************************************************************
+    This Source Code Form is subject to the terms of the
+    Open Hardware Description License, v. 1.0. If a copy
+    of the OHDL was not distributed with this file, You
+    can obtain one at http://juliusbaxter.net/ohdl/ohdl.txt
+
+    Description: mor1kx pronto espresso fetch unit
+
+    Fetch insn, advance PC (or take new branch address) on padv_i.
+
+    What we might want to do is have a 1-insn buffer here, so when the current
+    insn is fetched, but the main pipeline doesn't want it yet
+
+    indicate ibus errors
+
+    Copyright (C) 2012 Authors
+
+    Author(s): Julius Baxter <juliusbaxter@gmail.com>
+              Andy Ray <andy.ray@ujamjar.com>
+
+  ***************************************************************************** *)
+
   module Make(M : Utils.Module_cfg_signal) = struct
     module L = Utils.Logic(M.Bits)
     open M.Bits
@@ -777,11 +801,244 @@ module Pronto_espresso = struct
 end
 
 module Espresso = struct
+
+  (* ****************************************************************************
+    This Source Code Form is subject to the terms of the
+    Open Hardware Description License, v. 1.0. If a copy
+    of the OHDL was not distributed with this file, You
+    can obtain one at http://juliusbaxter.net/ohdl/ohdl.txt
+
+    Description: mor1kx espresso fetch unit
+
+    Fetch insn, advance PC (or take new branch address) on padv_i.
+
+    What we might want to do is have a 1-insn buffer here, so when the current
+    insn is fetched, but the main pipeline doesn't want it yet
+
+    indicate ibus errors
+
+    Copyright (C) 2012 Authors
+
+    Author(s): Julius Baxter <juliusbaxter@gmail.com>
+              Andy Ray <andy.ray@ujamjar.com>
+
+  ***************************************************************************** *)
+
   module Make(M : Utils.Module_cfg_signal) = struct
+    module L = Utils.Logic(M.Bits)
     open M.Bits
-    module I = interface end
-    module O = interface end
-    let fetch i = O.(map (fun (_,b) -> zero b) t)
+
+    module I = interface 
+      clk[1]
+      rst[1]
+      ibus_err[1]
+      ibus_ack[1]
+      ibus_dat[Defines.insn_width]
+      padv[1]
+      branch_occur[1]
+      branch_dest[M.o.operand_width]
+      du_restart[1]
+      du_restart_pc[M.o.operand_width]
+      fetch_take_exception_branch[1]
+      execute_waiting[1]
+      du_stall[1]
+      stepping[1]
+    end
+
+    module O = interface 
+      ibus_adr[M.o.operand_width]
+      ibus_req[1]
+      ibus_burst[1]
+      decode_insn[Defines.insn_width]
+      next_fetch_done[1]
+      fetch_rfa_adr[M.o.rf_addr_width]
+      fetch_rfb_adr[M.o.rf_addr_width]
+      pc_fetch[M.o.operand_width]
+      pc_fetch_next[M.o.operand_width]
+      decode_except_ibus_err[1]
+      fetch_advancing[1]
+    end
+
+    let fetch i = 
+      let open I in
+      let open HardCaml.Signal.Guarded in
+      let module R = Regs(struct let clk = i.clk let rst = i.rst end) in
+
+      let reset_pc = consti M.o.operand_width M.o.reset_pc in
+      let nop = consti Defines.Opcode.width Defines.Opcode.nop @: zero 26 in
+
+      let next_fetch_done = wire 1 in
+      let pc_fetch = wire M.o.operand_width in
+      let insn_buffer = wire Defines.insn_width in
+      let next_insn_buffered = wire 1 in
+
+      let taking_branch = i.branch_occur &: i.padv in
+   
+      let bus_access_done = (i.ibus_ack |: i.ibus_err) &: (~: (taking_branch)) in
+   
+      let pc_fetch_next = pc_fetch +:. 4 in
+   
+      let bus_access_done_r = R.reg ~e:vdd bus_access_done in
+      let branch_occur_r = R.reg ~e:vdd i.branch_occur in
+
+      (* Register rising edge on bus_access_done *)
+      let bus_access_done_re_r = R.reg ~e:vdd (bus_access_done &: (~: bus_access_done_r)) in
+   
+      let bus_access_done_fe = (~: bus_access_done) &: bus_access_done_r in
+   
+      let fetch_advancing = (i.padv |: i.fetch_take_exception_branch |: i.stepping) &:
+                              next_fetch_done
+      in
+   
+      let advancing_into_branch = R.reg ~e:vdd (fetch_advancing &: i.branch_occur) in
+   
+      let () = next_fetch_done <== 
+        ((bus_access_done_r |: next_insn_buffered) &:
+           (* Whenever we've just changed the fetch PC to
+              take a branch this will gate off any ACKs we
+              might get (legit or otherwise) from where we're
+              getting our instructions from (bus/cache). *)
+           (~: advancing_into_branch))
+      in
+   
+      let branch_occur_re = i.branch_occur &: (~: branch_occur_r) in
+   
+      (* When this occurs we had the insn burst stream finish just as we
+       had a new branch address requested. Because the control logic will
+       immediately continue onto the delay slot instruction, the branch target
+       is only valid for 1 cycle. The PC out to the bus/cache will then need
+       to change 1 cycle after it requested the insn after the delay slot.
+       This is annoying for the bus control/cache logic, but should result in
+       less cycles wasted fetching something we don't need, and as well reduce
+       the number of flops as we don't need to save the target PC which we had
+       for only 1 cycle *)
+      let awkward_transition_to_branch_target = branch_occur_re &: bus_access_done_fe in
+   
+      let wait_for_exception_after_ibus_err  = R.reg_fb ~e:vdd ~w:1
+        (L.pmux [
+          i.fetch_take_exception_branch, gnd;
+          i.ibus_err, vdd;
+        ])
+      in
+
+      let jal_buffered =
+        let opcode = L.sel insn_buffer Defines.Opcode.select in
+        (opcode ==:. Defines.Opcode.jalr) |:
+        (opcode ==:. Defines.Opcode.jal) 
+      in
+      let retain_fetch_pc = jal_buffered &: bus_access_done in
+   
+      let () = 
+        let e = (i.fetch_take_exception_branch |:
+                (((bus_access_done &: (~: (i.ibus_err))) |: taking_branch) &:
+                  ((~: (i.execute_waiting)) |: (~: next_insn_buffered)) &:
+                  (~: retain_fetch_pc)) |:
+                awkward_transition_to_branch_target |:
+                i.du_restart)
+        in
+        (* next PC - are we going somewhere else or advancing? *)
+        let d = 
+          mux2 i.du_restart i.du_restart_pc @@
+          mux2 (i.fetch_take_exception_branch |: taking_branch) i.branch_dest @@
+          pc_fetch_next;
+        in
+        pc_fetch <== R.reg ~cv:reset_pc ~rv:reset_pc  ~e d
+      in
+   
+      let fetch_req = R.reg_fb ~rv:vdd ~cv:vdd ~e:vdd ~w:1 
+        (fun fetch_req -> L.pmux [
+          i.fetch_take_exception_branch |: i.du_restart, vdd;
+            (* Force de-assert of req signal when branching.
+              This is to stop (ironically) the case where we've got the
+              instruction we're branching to already coming in on the bus,
+              which we usually don't assume will happen.
+              TODO: fix things so that we don't have to force a penalty to make
+              it work properly. *)
+          i.padv, (~: (i.branch_occur)) &: (~: (i.du_stall));
+          i.du_stall, fetch_req &: (~: bus_access_done);
+          ((~: fetch_req) &: (~: (i.execute_waiting)) &:
+          (~: wait_for_exception_after_ibus_err) &: (~: retain_fetch_pc) &:
+          (~: (i.du_stall)) &: (~: (i.stepping))),
+            vdd;
+          (bus_access_done &: (i.fetch_take_exception_branch |:
+                              i.execute_waiting |: i.ibus_err |: i.stepping)),
+            gnd;
+        ] fetch_req)
+      in
+
+      (* If insn_buffer contains the next insn we need, save that information here *)
+      let () = next_insn_buffered <== R.reg_fb ~e:vdd ~w:1
+        (L.pmux [
+          i.fetch_take_exception_branch, gnd;
+          (* Next instruction is usually buffered when we've got bus ack and
+            pipeline advance, except when we're branching (usually throw
+            away the fetch when branch is being indicated) *)
+          i.padv, i.ibus_ack &: (~: (i.branch_occur));
+          (i.ibus_ack &: i.execute_waiting), vdd;
+        ])
+      in
+   
+      let () = 
+        let e = 
+          (i.ibus_ack &: ((~: (i.execute_waiting)) |: (~: next_insn_buffered)) &:
+                 (* Don't buffer instruction after delay slot instruction
+                    (usually we're receiving it as taking branch is asserted)
+                    it could be another jump instruction and having it in
+                    the insn_buffer has annoying side-effects. *)
+                 (~: taking_branch))
+        in
+        insn_buffer <== R.reg ~rv:nop ~cv:nop ~e i.ibus_dat
+      in
+
+      let ibus_adr = pc_fetch in
+      let ibus_req = fetch_req in
+      let ibus_burst = gnd in
+
+      let decode_insn = R.reg_fb ~rv:nop ~cv:nop ~e:vdd ~w:Defines.insn_width
+        (L.pmux [
+          (* Put a NOP in the pipeline when starting exception - remove any state
+             which may be causing the exception *)
+          (i.fetch_take_exception_branch |: (i.du_stall &: (~: (i.execute_waiting)))),
+            nop;
+          ((i.padv &: (
+                      bus_access_done_r |:
+                      bus_access_done |:
+                      next_insn_buffered
+                     ) &:
+             (~: branch_occur_r)) |:
+           (* This case is when we stalled to get the delay-slot instruction
+           and we don't get enough padv to push it through the buffer *)
+           (i.branch_occur &: i.padv &: bus_access_done_re_r) |:
+           (bus_access_done_fe &: i.stepping)),
+            insn_buffer;
+        ])
+      in
+   
+      (* Early RF address fetch *)
+      let fetch_rfa_adr = L.sel insn_buffer Defines.ra_select  in
+      let fetch_rfb_adr = L.sel insn_buffer Defines.rb_select  in
+   
+      let decode_except_ibus_err = R.reg_fb ~e:vdd ~w:1
+        (L.pmux [
+          ((i.padv |: i.fetch_take_exception_branch) &: i.branch_occur |: i.du_stall), gnd;
+          fetch_req, i.ibus_err;
+        ])
+      in
+   
+      O.{
+        ibus_adr;
+        ibus_req;
+        ibus_burst;
+        decode_insn;
+        next_fetch_done;
+        fetch_rfa_adr;
+        fetch_rfb_adr;
+        pc_fetch;
+        pc_fetch_next;
+        decode_except_ibus_err;
+        fetch_advancing;
+      }
+
     module Inst = M.Inst(I)(O)
     let fetch_inst = Inst.inst "fetch" fetch
   end

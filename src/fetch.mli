@@ -100,8 +100,35 @@ end
 
 module Espresso : sig
   module Make(M : Utils.Module_cfg_signal) : sig
-    module I : interface end
-    module O : interface end
+    module I : interface 
+      clk
+      rst
+      ibus_err
+      ibus_ack
+      ibus_dat
+      padv
+      branch_occur
+      branch_dest
+      du_restart
+      du_restart_pc
+      fetch_take_exception_branch
+      execute_waiting
+      du_stall
+      stepping
+    end
+    module O : interface 
+      ibus_adr
+      ibus_req
+      ibus_burst
+      decode_insn
+      next_fetch_done
+      fetch_rfa_adr
+      fetch_rfb_adr
+      pc_fetch
+      pc_fetch_next
+      decode_except_ibus_err
+      fetch_advancing
+    end
     val fetch : M.Bits.t I.t -> M.Bits.t O.t
     val fetch_inst : M.Bits.t I.t -> M.Bits.t O.t
   end
