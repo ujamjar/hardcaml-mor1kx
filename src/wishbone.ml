@@ -18,8 +18,8 @@
 module Make(M : Utils.Module_cfg_signal) = struct
 
   open M.Bits
-  module Sel = Utils.Sel(M.Bits)
-  open Sel
+  module L = Utils.Logic(M.Bits)
+  open L
 
   type bus_type = 
     | Classic

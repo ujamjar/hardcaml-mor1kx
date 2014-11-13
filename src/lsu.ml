@@ -3,8 +3,8 @@ open Option
 
 module U(B : HardCaml.Comb.S) = struct
   open B
-  module Sel = Utils.Sel(B)
-  open Sel
+  module L = Utils.Logic(B)
+  open L
 
   let bsel length adr = mux length [
     mux adr.[1:0] (List.map (consti 4) [ 0b1000; 0b0100; 0b0010; 0b0001]);
@@ -54,8 +54,8 @@ module Espresso = struct
 
     open M.Bits
     module U = U(M.Bits)
-    module Sel = Utils.Sel(M.Bits)
-    open Sel
+    module L = Utils.Logic(M.Bits)
+    open L
 
     let operand_width = M.o.operand_width
 
@@ -204,8 +204,8 @@ module Cappuccino = struct
 
     open M.Bits
     module U = U(M.Bits)
-    module Sel = Utils.Sel(M.Bits)
-    open Sel
+    module L = Utils.Logic(M.Bits)
+    open L
 
     open HardCaml.Signal.Guarded
 
@@ -278,7 +278,7 @@ module Cappuccino = struct
       let open I in
       let module R = Regs(struct let clk = i.clk let rst = i.rst end) in
 
-      let regm (c0,v0) (c1,v1) = R.reg_fb ~e:vdd ~w:1 (fun d -> mux2 c0 v0 @@ mux2 c1 v1 @@ d) in
+      let regm x0 x1 = R.reg_fb ~e:vdd ~w:1 (pmux [ x0; x1 ]) in
       let state_is, sm, next = R.statemachine ~e:vdd 
         (Enum_sm.enum_from_to Bounded_sm.min_bound Bounded_sm.max_bound)
       in

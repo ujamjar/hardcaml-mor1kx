@@ -28,10 +28,10 @@
   mor1kx_fetch_cappuccino.v
   mor1kx_fetch_espresso.v
   mor1kx_fetch_prontoespresso.v
-  mor1kx_fetch_tcm_prontoespresso.v
+  mor1kx_fetch_tcm_prontoespresso.v   -> Fetch.Tcm_prontoespress
   mor1kx_icache.v                     -> Icache
   mor1kx_immu.v                       -> Immu
-  mor1kx_lsu_cappuccino.v
+  mor1kx_lsu_cappuccino.v             -> Lsu.Cappuccino
   mor1kx_lsu_espresso.v               -> Lsu.Espresso
   mor1kx_pic.v                        -> Pic
   mor1kx_rf_cappuccino.v
@@ -228,6 +228,24 @@ module Test_Rf_Cappuccino = struct
   module G = HardCaml.Interface.Circ(X.I)(X.O)
   let name = "rf_cappuccino"
   let circ = G.make name X.rf
+  let () = HardCaml.Rtl.Verilog.write print_string circ
+end
+
+module Test_Fetch_Tcm_pronto_espresso= struct
+  module M = Utils.Module_flat
+  module X = Fetch.Tcm_pronto_espresso.Make(M)
+  module G = HardCaml.Interface.Circ(X.I)(X.O)
+  let name = "fetch_tcm_pronto_espresso"
+  let circ = G.make name X.fetch
+  let () = HardCaml.Rtl.Verilog.write print_string circ
+end
+
+module Test_Fetch_Pronto_espresso= struct
+  module M = Utils.Module_flat
+  module X = Fetch.Pronto_espresso.Make(M)
+  module G = HardCaml.Interface.Circ(X.I)(X.O)
+  let name = "fetch_pronto_espresso"
+  let circ = G.make name X.fetch
   let () = HardCaml.Rtl.Verilog.write print_string circ
 end
 

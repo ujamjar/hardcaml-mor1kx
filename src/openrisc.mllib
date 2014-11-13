@@ -20,3 +20,4 @@ Dcache
 Icache
 Store_buffer
 Rf
+Fetch

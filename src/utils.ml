@@ -446,7 +446,7 @@ end)
 
 (***********************************************************************)
 
-module Sel(B : HardCaml.Comb.S) = struct
+module Logic(B : HardCaml.Comb.S) = struct
   open B
 
   let drop_bottom x n = select x (width x - 1) n
@@ -473,12 +473,15 @@ module Sel(B : HardCaml.Comb.S) = struct
     else
       mux sel (Array.to_list a @ [default])
 
+  let pmux list last = 
+    (List.fold_left (fun f (c, d) -> (fun s -> f (mux2 c d s))) (fun s -> s) list) last
+
 end
 
 let g_elif c t f = HardCaml.Signal.Guarded.([ g_if c t f ])
 
 let ($==\) (x, l) y = 
-  let module S = Sel(HardCaml.Signal.Comb) in
+  let module S = Logic(HardCaml.Signal.Comb) in
   HardCaml.Signal.Guarded.( x $== S.insert x#q y l )
 
 

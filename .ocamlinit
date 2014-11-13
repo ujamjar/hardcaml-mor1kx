@@ -2,6 +2,11 @@
 #require "hardcaml,hardcaml.syntax,deriving";;
 #load "openrisc.cma";;
 
+module R = Utils.Regs(struct 
+  let clk = HardCaml.Signal.Comb.clock
+  let rst = HardCaml.Signal.Comb.reset
+end)
+
 open HardCaml
 module B = Bits.Comb.IntbitsList
 module S = Signal.Comb

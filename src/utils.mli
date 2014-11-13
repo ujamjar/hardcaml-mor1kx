@@ -145,7 +145,7 @@ module Regs(S : sig
   val rst : HardCaml.Signal.Comb.t
 end) : Seq
 
-module Sel(B : HardCaml.Comb.S) : sig
+module Logic(B : HardCaml.Comb.S) : sig
   val drop_bottom : B.t -> int -> B.t
   val drop_top : B.t -> int -> B.t
   val sel_bottom : B.t -> int -> B.t
@@ -153,6 +153,7 @@ module Sel(B : HardCaml.Comb.S) : sig
   val insert : t:B.t -> f:B.t -> int -> B.t
   val sel : B.t -> (int * int) -> B.t
   val cases : B.t -> B.t -> (int * B.t) list -> B.t
+  val pmux : (B.t * B.t) list -> B.t -> B.t
 end
 
 

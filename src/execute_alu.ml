@@ -22,8 +22,8 @@ module Make(M : Utils.Module_cfg_signal) = struct
 
   open M
   open Bits
-  module Sel = Utils.Sel(M.Bits)
-  open Sel
+  module L = Utils.Logic(M.Bits)
+  open L
 
   let operand_width = M.o.Option.operand_width
 

@@ -17,8 +17,8 @@ module Make(M : Utils.Module_cfg_signal) = struct
 
   open M
   open Bits
-  module Sel = Utils.Sel(M.Bits)
-  open Sel
+  module L = Utils.Logic(M.Bits)
+  open L
 
   let operand_width = M.o.Option.operand_width
 
@@ -217,7 +217,7 @@ module Make(M : Utils.Module_cfg_signal) = struct
                   next Tlb_idle;
                 ] [
                   itlb_trans_reload_din $==
-                    List.fold_left (fun t (f,n) -> Sel.insert ~t ~f n)
+                    List.fold_left (fun t (f,n) -> insert ~t ~f n)
                     itlb_trans_reload_din#q
                     [
                       i.tlb_reload_data.[31:13], 13;
@@ -230,7 +230,7 @@ module Make(M : Utils.Module_cfg_signal) = struct
                   itlb_trans_reload_we $==. 1;
 
                   itlb_match_reload_din $==
-                    List.fold_left (fun t (f,n) -> Sel.insert ~t ~f n)
+                    List.fold_left (fun t (f,n) -> insert ~t ~f n)
                     itlb_match_reload_din#q
                     [
                       i.virt_addr_match.[31:13], 13;

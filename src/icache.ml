@@ -19,8 +19,8 @@ module Make(M : Utils.Module_cfg_signal) = struct
   open HardCaml.Signal.Guarded 
   open Utils
   open Option
-  module Sel = Utils.Sel(M.Bits)
-  open Sel
+  module L = Utils.Logic(M.Bits)
+  open L
 
   let insn_width = Defines.insn_width
 
