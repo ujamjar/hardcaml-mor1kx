@@ -16,8 +16,6 @@ module Make(M : Utils.Module_cfg_signal) : sig
     enable
     virt_addr
     virt_addr_match
-    op_store
-    op_load
     supervisor_mode
     tlb_reload_ack
     tlb_reload_data

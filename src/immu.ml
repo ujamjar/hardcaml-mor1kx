@@ -28,8 +28,6 @@ module Make(M : Utils.Module_cfg_signal) = struct
     enable[1]
     virt_addr[operand_width]
     virt_addr_match[operand_width]
-    op_store[1]
-    op_load[1]
     supervisor_mode[1]
     tlb_reload_ack[1]
     tlb_reload_data[operand_width]

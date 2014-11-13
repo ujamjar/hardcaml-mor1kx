@@ -266,7 +266,7 @@ module Tcm_pronto_espresso = struct
       let next_insn_opcode = 
           mux2 insn_buffered#q
             (L.sel insn_buffer Defines.Opcode.select)
-				    (L.sel i.ibus_dat Defines.Opcode.select)
+            (L.sel i.ibus_dat Defines.Opcode.select)
       in
 
       let cmap = List.map (fun (a,b) -> consti Defines.Opcode.width a, b) in
@@ -274,28 +274,28 @@ module Tcm_pronto_espresso = struct
         g_when ((i.ibus_ack &: (~: (just_took_branch_addr#q))) |: insn_buffered#q) [
           g_switch (next_insn_opcode) (cmap [
             Defines.Opcode.j, [
-              next_insn_will_branch	$==. 1;
+              next_insn_will_branch $==. 1;
             ];
             Defines.Opcode.jal, [
-              next_insn_will_branch	$==. 1;
+              next_insn_will_branch $==. 1;
             ];
             Defines.Opcode.jr, [
-              next_insn_will_branch	$==. 1;
+              next_insn_will_branch $==. 1;
             ];
             Defines.Opcode.jalr, [
-              next_insn_will_branch	$==. 1;
+              next_insn_will_branch $==. 1;
             ];
             Defines.Opcode.bnf, [
-              next_insn_will_branch	$== ((~: (i.flag |: i.flag_set)) |: i.flag_clear);
+              next_insn_will_branch $== ((~: (i.flag |: i.flag_set)) |: i.flag_clear);
             ];
             Defines.Opcode.bf, [
-              next_insn_will_branch	$== ((~: ((~: (i.flag)) |: i.flag_clear)) |: i.flag_set);
+              next_insn_will_branch $== ((~: ((~: (i.flag)) |: i.flag_clear)) |: i.flag_set);
             ];
             Defines.Opcode.systrapsync, [
-              next_insn_will_branch	$==. 1;
+              next_insn_will_branch $==. 1;
             ];
             Defines.Opcode.rfe, [
-              next_insn_will_branch	$==. 1;
+              next_insn_will_branch $==. 1;
             ];
           ]);
         ];
@@ -321,15 +321,15 @@ module Tcm_pronto_espresso = struct
         push_buffered_jump_through_pipeline 
       in
 
-      let fetch_rfa_adr	= 
+      let fetch_rfa_adr = 
         mux2 insn_buffered#q
           (L.sel insn_buffer Defines.ra_select)
-				  (L.sel i.ibus_dat Defines.ra_select) 
+          (L.sel i.ibus_dat Defines.ra_select) 
       in
-      let fetch_rfb_adr	= 
+      let fetch_rfb_adr = 
         mux2 insn_buffered#q
           (L.sel insn_buffer Defines.rb_select)
-				  (L.sel i.ibus_dat Defines.rb_select) 
+          (L.sel i.ibus_dat Defines.rb_select) 
       in
       let fetch_rf_re = 
         (i.ibus_ack |: execute_waiting_deasserted) &: (i.padv |: i.stepping) 
@@ -636,9 +636,9 @@ module Pronto_espresso = struct
 
       let next_instruction_to_decode_condition = 
         new_insn_ready &:
-				(i.padv |: i.stepping) &:
-				(~: padv_deasserted) &:
-				(~: hold_decode_output) &:
+        (i.padv |: i.stepping) &:
+        (~: padv_deasserted) &:
+        (~: hold_decode_output) &:
         (~: ((i.branch_occur &: i.padv &: (~: took_early_calc_pc)) |:
           i.fetch_take_exception_branch));
       in
@@ -1045,11 +1045,473 @@ module Espresso = struct
 end
 
 module Cappuccino = struct
+  (* ****************************************************************************
+    This Source Code Form is subject to the terms of the
+    Open Hardware Description License, v. 1.0. If a copy
+    of the OHDL was not distributed with this file, You
+    can obtain one at http://juliusbaxter.net/ohdl/ohdl.txt
+
+    Description: mor1kx fetch/address stage unit
+
+    basically an interface to the ibus/icache subsystem that can react to
+    exception and branch signals.
+
+    Copyright (C) 2012 Authors
+
+    Author(s): Julius Baxter <juliusbaxter@gmail.com>
+               Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
+               Andy Ray <andy.ray@ujamjar.com>
+
+  ***************************************************************************** *)
   module Make(M : Utils.Module_cfg_signal) = struct
+    module L = Utils.Logic(M.Bits)
     open M.Bits
-    module I = interface end
-    module O = interface end
-    let fetch i = O.(map (fun (_,b) -> zero b) t)
+    
+    module I = interface 
+      clk[1]
+      rst[1]
+      spr_bus_addr[16]
+      spr_bus_we[1]
+      spr_bus_stb[1]
+      spr_bus_dat[M.o.operand_width]
+      ic_enable[1]
+      immu_enable[1]
+      supervisor_mode[1]
+      ibus_err[1]
+      ibus_ack[1]
+      ibus_dat[Defines.insn_width]
+      padv[1]
+      padv_ctrl[1] 
+      decode_branch[1]
+      decode_branch_target[M.o.operand_width]
+      ctrl_branch_exception[1]
+      ctrl_branch_except_pc[M.o.operand_width]
+      du_restart[1]
+      du_restart_pc[M.o.operand_width]
+      decode_op_brcond[1]
+      branch_mispredict[1]
+      execute_mispredict_target[M.o.operand_width]
+      pipeline_flush[1]
+      doing_rfe[1]
+    end
+    
+    module O = interface 
+      spr_bus_dat_ic[M.o.operand_width]
+      spr_bus_ack_ic[1]
+      spr_bus_dat_immu[M.o.operand_width]
+      spr_bus_ack_immu[1]
+      ibus_req[1]
+      ibus_adr[M.o.operand_width]
+      ibus_burst[1]
+      pc_decode[M.o.operand_width]
+      decode_insn[Defines.insn_width]
+      fetch_valid[1]
+      fetch_rfa_adr[M.o.rf_addr_width]
+      fetch_rfb_adr[M.o.rf_addr_width]
+      fetch_rf_adr_valid[1]
+      decode_except_ibus_err[1]
+      decode_except_itlb_miss[1]
+      decode_except_ipagefault[1]
+      fetch_exception_taken[1]
+    end
+    
+    module Ic = Icache.Make(M)
+    module Immu = Immu.Make(M)
+
+    type sm = Idle | Read | Tlb_reload | Ic_refill
+      deriving(Bounded, Enum)
+
+    let fetch i = 
+      let open I in
+      let open HardCaml.Signal.Guarded in
+      let module R = Regs(struct let clk = i.clk let rst = i.rst end) in
+
+      let nop = consti Defines.Opcode.width Defines.Opcode.nop @: zero 26 in
+      let reset_pc = consti M.o.operand_width M.o.reset_pc in
+
+      let state_is, sm, next = R.statemachine ~e:vdd
+        (Enum_sm.enum_from_to Bounded_sm.min_bound Bounded_sm.max_bound)
+      in
+      let s_idle, s_refill = state_is Idle, state_is Ic_refill in
+
+      let ibus_ack = R.g_reg ~e:vdd 1 in
+      let exception_while_tlb_reload = R.g_reg ~e:vdd 1 in
+      let ibus_adr = R.g_reg ~e:vdd M.o.operand_width in
+      let ibus_req = R.g_reg ~e:vdd 1 in
+      let ibus_dat = R.g_reg ~e:vdd Defines.insn_width in
+      let tlb_reload_ack = R.g_reg ~e:vdd 1 in
+      let tlb_reload_data = R.g_reg ~e:vdd M.o.operand_width in
+
+      let ic = Ic.O.(map (fun (_,b) -> wire b) t) in
+      let immu = Immu.O.(map (fun (_,b) -> wire b) t) in
+
+      (********************************************************)
+      let fetch_valid = wire 1 in
+      let ic_access = wire 1 in
+      let mispredict_stall = wire 1 in
+      let nop_ack = wire 1 in
+      let except_ipagefault_clear = wire 1 in
+      let pc_fetch = wire M.o.operand_width in
+      (********************************************************)
+
+      let ibus_access = 
+        ((~: ic_access) |: immu.Immu.O.tlb_reload_busy |: ic.Ic.O.invalidate) &:
+        (~: (ic.Ic.O.refill)) |:
+        (~: s_idle) &: (~: s_refill) |:
+        ibus_ack#q
+      in
+      let imem_ack = mux2 ibus_access ibus_ack#q ic.Ic.O.cpu_ack in
+
+      let imem_err = R.reg ~e:vdd i.ibus_err in
+        
+      let bus_access_done = 
+        (imem_ack |: imem_err |: nop_ack) &: 
+        (~: (immu.Immu.O.busy)) &: (~: (immu.Immu.O.tlb_reload_busy))
+      in
+      
+      let ctrl_branch_exception_edge = 
+        let ctrl_branch_exception_r = R.reg ~e:vdd i.ctrl_branch_exception in
+        i.ctrl_branch_exception &: (~: ctrl_branch_exception_r);
+      in
+
+      let fetch_exception_taken = R.reg_fb ~e:vdd ~w:1
+        (fun fetch_exception_taken -> L.pmux [
+          fetch_exception_taken, gnd;
+          (i.ctrl_branch_exception &: bus_access_done &: i.padv), vdd;
+        ] gnd)
+      in
+
+      let flush = R.reg_fb ~e:vdd ~w:1 
+        (L.pmux [
+          (bus_access_done &: i.padv |: i.du_restart), gnd;
+          i.pipeline_flush, vdd;
+        ])
+      in
+      (* pipeline_flush_i comes on the same edge as branch_except_occur during
+         rfe, but on an edge later when an exception occurs, but we always need
+         to keep on flushing when the branch signal comes in. *)
+      let flushing = i.pipeline_flush |: ctrl_branch_exception_edge |: flush in
+
+      (* used to keep fetch_valid_o high during stall *)
+      let stall_fetch_valid = (~: (i.padv)) &: fetch_valid in
+
+      (*  fetch_valid_o generation *)
+      let () = fetch_valid <== R.reg ~e:vdd
+        (L.pmux [
+          i.pipeline_flush, gnd;
+          (bus_access_done &: i.padv &: (~: mispredict_stall) &: (~: (immu.Immu.O.busy)) &:
+            (~: (immu.Immu.O.tlb_reload_busy)) |: stall_fetch_valid), vdd;
+        ] gnd)
+      in
+
+      let except_itlb_miss = 
+        immu.Immu.O.tlb_miss &: i.immu_enable &: bus_access_done &:
+        (~: mispredict_stall) &: (~: (i.doing_rfe))
+      in
+      let except_ipagefault = 
+        immu.Immu.O.pagefault &: i.immu_enable &: bus_access_done &:
+        (~: mispredict_stall) &: (~: (i.doing_rfe)) |:
+        immu.Immu.O.tlb_reload_pagefault
+      in
+
+      let decode_except_ibus_err = R.reg_fb ~e:vdd ~w:1 
+        (fun decode_except_ibus_err -> (L.pmux [
+          i.du_restart, gnd;
+          imem_err, vdd;
+          (decode_except_ibus_err &: i.ctrl_branch_exception), gnd;
+        ] decode_except_ibus_err))
+      in
+
+      let decode_except_itlb_miss  = R.reg_fb ~e:vdd ~w:1
+        (fun decode_except_itlb_miss -> (L.pmux [
+          i.du_restart, gnd;
+          immu.Immu.O.tlb_reload_busy, gnd;
+          except_itlb_miss, vdd;
+          (decode_except_itlb_miss &: i.ctrl_branch_exception), gnd;
+        ] decode_except_itlb_miss))
+      in
+
+      let decode_except_ipagefault = R.reg_fb ~e:vdd ~w:1
+        (L.pmux [
+          i.du_restart, gnd;
+          except_ipagefault, vdd;
+          except_ipagefault_clear, gnd;
+        ])
+      in
+      let () = 
+        except_ipagefault_clear <== (decode_except_ipagefault &: i.ctrl_branch_exception)
+      in
+
+      let addr_valid = 
+        bus_access_done &: i.padv &:
+        (~: (except_itlb_miss |: except_ipagefault)) |:
+        decode_except_itlb_miss &: i.ctrl_branch_exception |:
+        decode_except_ipagefault &: i.ctrl_branch_exception |:
+        i.doing_rfe
+      in
+
+      (* Branch misprediction stall logic *)
+      let fetching_brcond = R.reg_fb ~e:vdd ~w:1
+        (L.pmux [
+          i.pipeline_flush, gnd;
+          (i.decode_op_brcond &: addr_valid), vdd;
+          (bus_access_done &: i.padv |: i.du_restart), gnd;
+        ])
+      in
+
+      let fetching_mispredicted_branch = R.reg_fb ~e:vdd ~w:1
+        (L.pmux [
+          i.pipeline_flush, gnd;
+          (bus_access_done &: i.padv |: i.du_restart), gnd;
+          (fetching_brcond &: i.branch_mispredict &: i.padv), vdd;
+        ])
+      in
+
+      let () = mispredict_stall <== 
+        (fetching_mispredicted_branch |: i.branch_mispredict &: fetching_brcond)
+      in
+
+      let imem_dat = 
+          mux2 (nop_ack |: except_itlb_miss |: except_ipagefault) nop @@
+          mux2 ibus_access ibus_dat#q ic.Ic.O.cpu_dat
+      in
+
+      let ic_enable_r = R.reg_fb ~e:vdd ~w:1
+        (L.pmux [
+          (i.ic_enable &: (~: (ibus_req#q))), vdd;
+          ((~: (i.ic_enable)) &: (~: (ic.Ic.O.refill))), gnd;
+        ])
+      in
+      let ic_enabled = i.ic_enable &: ic_enable_r in
+
+      let pc_addr = R.reg ~rv:reset_pc ~cv:reset_pc ~e:vdd
+        (L.pmux [
+          i.du_restart, i.du_restart_pc;
+          i.ctrl_branch_exception &: (~: fetch_exception_taken), i.ctrl_branch_except_pc;
+          i.branch_mispredict |: fetching_mispredicted_branch, i.execute_mispredict_target;
+          i.decode_branch, i.decode_branch_target;
+        ] pc_fetch)
+      in
+
+      let () = pc_fetch <== R.reg
+        ~rv:reset_pc ~cv:reset_pc
+        ~e:(addr_valid |: i.du_restart) pc_addr 
+      in
+
+      let pc_decode = R.reg ~e:(bus_access_done &: i.padv &: (~: mispredict_stall)) pc_fetch in
+
+      let ic_addr = mux2 (addr_valid |: i.du_restart) pc_addr pc_fetch in
+      let ic_addr_match = mux2 i.immu_enable immu.Immu.O.phys_addr pc_fetch in
+
+      let next_ibus_adr = 
+        if M.o.icache_block_width = 5 then
+          (ibus_adr#q.[31:5] @: (ibus_adr#q.[4:0] +:. 4))  (* 32 byte *)
+        else
+          (ibus_adr#q.[31:4] @: (ibus_adr#q.[3:0] +:. 4))  (* 16 byte *)
+      in
+
+      let () = compile [
+        ibus_ack $==. 0;
+        exception_while_tlb_reload $==. 0;
+        tlb_reload_ack $==. 0;
+
+        sm [
+          Idle, [
+            ibus_req $==. 0;
+            g_if (i.padv &: ibus_access &: (~: (ibus_ack#q)) &: (~: imem_err) &: (~: nop_ack)) [
+                g_if (immu.Immu.O.tlb_reload_req) [
+                  ibus_adr $== immu.Immu.O.tlb_reload_addr;
+                  ibus_req $==. 1;
+                  next Tlb_reload;
+                ] @@ g_elif (i.immu_enable) [
+                  ibus_adr $== immu.Immu.O.phys_addr;
+                  g_when Immu.O.((~: (immu.tlb_miss)) &: 
+                                 (~: (immu.pagefault)) &: 
+                                 (~: (immu.busy))) [
+                      ibus_req $==. 1;
+                      next Read;
+                  ]
+                ] @@ g_elif ((~: (i.ctrl_branch_exception)) |: i.doing_rfe) [
+                  ibus_adr $== pc_fetch;
+                  ibus_req $==. 1;
+                  next Read;
+                ] []
+            ] @@ g_elif (ic.Ic.O.refill_req) [
+                ibus_adr $== ic_addr_match;
+                ibus_req $==. 1;
+                next Ic_refill;
+            ] []
+          ];
+
+          Ic_refill, [
+            ibus_req $==. 1;
+            g_when (i.ibus_ack) [
+                ibus_adr $== next_ibus_adr;
+                g_when (ic.Ic.O.refill_done) [
+                  ibus_req $==. 0;
+                  next Idle;
+                ]
+            ]
+          ];
+
+          Read, [
+            ibus_ack $== i.ibus_ack;
+            ibus_dat $== i.ibus_dat;
+            g_when (i.ibus_ack |: i.ibus_err) [
+                ibus_req $==. 0;
+                next Idle;
+            ]
+          ];
+
+          Tlb_reload, [
+            g_when (i.ctrl_branch_exception) [
+              exception_while_tlb_reload $==. 1;
+            ];
+
+            ibus_adr $== immu.Immu.O.tlb_reload_addr;
+            tlb_reload_data $== i.ibus_dat;
+            tlb_reload_ack $== (i.ibus_ack &: immu.Immu.O.tlb_reload_req);
+
+            g_when (~: (immu.Immu.O.tlb_reload_req)) [
+              next Idle;
+            ];
+
+            ibus_req $== immu.Immu.O.tlb_reload_req;
+            g_when (i.ibus_ack |: tlb_reload_ack#q) [
+              ibus_req $==. 0;
+            ];
+          ];
+
+        ]
+      ] in
+
+      let fetch_rfa_adr = L.sel imem_dat Defines.ra_select in
+      let fetch_rfb_adr = L.sel imem_dat Defines.rb_select in
+      let fetch_rf_adr_valid = bus_access_done &: i.padv in
+ 
+      let ic_refill_allowed = 
+        ((~: ((immu.Immu.O.tlb_miss |: immu.Immu.O.pagefault) &: i.immu_enable)) &:
+        (~: (i.ctrl_branch_exception)) &: (~: (i.pipeline_flush)) &:
+        (~: mispredict_stall) |: (i.doing_rfe)) &:
+        (~: (immu.Immu.O.tlb_reload_busy)) &: (~: (immu.Immu.O.busy))
+      in
+      let ic_req = 
+        i.padv &: (~: decode_except_ibus_err) &:
+        (~: decode_except_itlb_miss) &: (~: except_itlb_miss) &:
+        (~: decode_except_ipagefault) &: (~: except_ipagefault) &:
+        ic_access &: ic_refill_allowed
+      in
+
+      let () = nop_ack <== Immu.O.(
+        i.padv &: (~: bus_access_done) &: (~: (ibus_req#q &: ibus_access)) &:
+		    ((i.immu_enable &: (immu.tlb_miss |: immu.pagefault) &: (~: (immu.tlb_reload_busy))) |:
+		    ctrl_branch_exception_edge &: (~: (immu.tlb_reload_busy)) |:
+		    exception_while_tlb_reload#q &: (~: (immu.tlb_reload_busy)) |:
+		    immu.tlb_reload_pagefault |:
+		    mispredict_stall)
+      )
+      in
+
+      (* icache *)
+      let () = 
+        if M.f.instructioncache then
+          let ic_access' = 
+            if M.o.icache_limit_width = M.o.operand_width then
+              ic_enabled &: (~: (immu.Immu.O.cache_inhibit &: i.immu_enable))
+            else if (M.o.icache_limit_width < M.o.operand_width) then
+              ic_enabled &:
+                (ic_addr_match.[M.o.operand_width-1:M.o.icache_limit_width] ==:. 0) &:
+                (~: (immu.Immu.O.cache_inhibit &: i.immu_enable))
+            else 
+              failwith ("ERROR: OPTION_ICACHE_LIMIT_WIDTH > OPTION_OPERAND_WIDTH");
+          in
+          let ic' = Ic.icache_inst 
+            Ic.I.{
+              clk = i.clk;
+              rst = i.rst |: imem_err; (* XXX NONONO *)
+              ic_access;
+              cpu_adr = ic_addr;
+              cpu_adr_match = ic_addr_match;
+              cpu_req = ic_req;
+              wradr = ibus_adr#q;
+              wrdat = i.ibus_dat;
+              we = i.ibus_ack;
+              spr_bus_addr = i.spr_bus_addr;
+              spr_bus_we = i.spr_bus_we;
+              spr_bus_stb = i.spr_bus_stb;
+              spr_bus_dat_i = i.spr_bus_dat;
+            }
+          in
+          let _ = Ic.O.(map2 (fun q d -> q <== d) ic ic') in
+          let () = ic_access <== ic_access' in
+          ()
+        else
+          let _ = Ic.O.(map2 (fun q (_,b) -> q <== zero b) ic t) in
+          let () = ic_access <== gnd in
+          ()
+      in
+
+      (* immu *)
+      let () = 
+        if M.f.immu then
+          let immu_enable = 
+            i.immu_enable &: (~: (i.pipeline_flush)) &: (~: (mispredict_stall)) 
+          in
+          let virt_addr = ic_addr in
+          let immu_spr_bus_stb = i.spr_bus_stb &: (~: (i.padv_ctrl) |: i.spr_bus_we) in
+          let immu' = Immu.immu_inst
+            Immu.I.{
+              clk = i.clk;
+              rst = i.rst;
+              enable = immu_enable;
+              virt_addr;
+              virt_addr_match = pc_fetch;
+              supervisor_mode = i.supervisor_mode;
+              tlb_reload_ack = tlb_reload_ack#q;
+              tlb_reload_data = tlb_reload_data#q;
+              tlb_reload_pagefault_clear = except_ipagefault_clear;
+              spr_bus_addr = i.spr_bus_addr;
+              spr_bus_we = i.spr_bus_we;
+              spr_bus_stb = immu_spr_bus_stb;
+              spr_bus_dat_i = i.spr_bus_dat;
+            }
+          in
+          let _ = Immu.O.(map2 (fun q d -> q <== d) immu immu') in
+          ()
+        else
+          let _ = Immu.O.(map2 (fun q (_,b) -> q <== zero b) immu t) in
+          ()
+      in
+
+      let ibus_burst = (~: ibus_access) &: ic.Ic.O.refill &: (~: (ic.Ic.O.refill_done)) in
+      let decode_insn = R.reg_fb
+        ~rv:nop ~cv:nop ~e:vdd ~w:Defines.insn_width
+        (L.pmux [
+          (imem_err |: flushing), nop;
+          (bus_access_done &: i.padv &: (~: mispredict_stall)), imem_dat;
+        ])
+      in
+
+      O.{
+        spr_bus_dat_ic = ic.Ic.O.spr_bus_dat_o;
+        spr_bus_ack_ic = ic.Ic.O.spr_bus_ack;
+        spr_bus_dat_immu = immu.Immu.O.spr_bus_dat_o;
+        spr_bus_ack_immu = immu.Immu.O.spr_bus_ack;
+        ibus_req = ibus_req#q;
+        ibus_adr = ibus_adr#q;
+        ibus_burst;
+        pc_decode;
+        decode_insn;
+        fetch_valid;
+        fetch_rfa_adr;
+        fetch_rfb_adr;
+        fetch_rf_adr_valid;
+        decode_except_ibus_err;
+        decode_except_itlb_miss;
+        decode_except_ipagefault;
+        fetch_exception_taken;
+      }
+    
     module Inst = M.Inst(I)(O)
     let fetch_inst = Inst.inst "fetch" fetch
   end

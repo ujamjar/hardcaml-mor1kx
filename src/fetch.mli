@@ -136,8 +136,52 @@ end
 
 module Cappuccino: sig
   module Make(M : Utils.Module_cfg_signal) : sig
-    module I : interface end
-    module O : interface end
+    module I : interface 
+      clk
+      rst
+      spr_bus_addr
+      spr_bus_we
+      spr_bus_stb
+      spr_bus_dat
+      ic_enable
+      immu_enable
+      supervisor_mode
+      ibus_err
+      ibus_ack
+      ibus_dat
+      padv
+      padv_ctrl 
+      decode_branch
+      decode_branch_target
+      ctrl_branch_exception
+      ctrl_branch_except_pc
+      du_restart
+      du_restart_pc
+      decode_op_brcond
+      branch_mispredict
+      execute_mispredict_target
+      pipeline_flush
+      doing_rfe
+    end
+    module O : interface 
+      spr_bus_dat_ic
+      spr_bus_ack_ic
+      spr_bus_dat_immu
+      spr_bus_ack_immu
+      ibus_req
+      ibus_adr
+      ibus_burst
+      pc_decode
+      decode_insn
+      fetch_valid
+      fetch_rfa_adr
+      fetch_rfb_adr
+      fetch_rf_adr_valid
+      decode_except_ibus_err
+      decode_except_itlb_miss
+      decode_except_ipagefault
+      fetch_exception_taken
+    end
     val fetch : M.Bits.t I.t -> M.Bits.t O.t
     val fetch_inst : M.Bits.t I.t -> M.Bits.t O.t
   end

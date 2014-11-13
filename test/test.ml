@@ -249,11 +249,20 @@ module Test_Fetch_Pronto_espresso= struct
   let () = HardCaml.Rtl.Verilog.write print_string circ
 end
 
-module Test_Fetch_Espresso= struct
+module Test_Fetch_Espresso = struct
   module M = Utils.Module_flat
   module X = Fetch.Espresso.Make(M)
   module G = HardCaml.Interface.Circ(X.I)(X.O)
   let name = "fetch_espresso"
+  let circ = G.make name X.fetch
+  let () = HardCaml.Rtl.Verilog.write print_string circ
+end
+
+module Test_Fetch_Cappuccino = struct
+  module M = Utils.Module_flat
+  module X = Fetch.Cappuccino.Make(M)
+  module G = HardCaml.Interface.Circ(X.I)(X.O)
+  let name = "fetch_cappuccino"
   let circ = G.make name X.fetch
   let () = HardCaml.Rtl.Verilog.write print_string circ
 end
