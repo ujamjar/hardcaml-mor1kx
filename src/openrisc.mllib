@@ -21,3 +21,4 @@ Icache
 Store_buffer
 Rf
 Fetch
+Execute_ctrl_cappuccino

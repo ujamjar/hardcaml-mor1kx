@@ -24,17 +24,17 @@
   mor1kx_decode.v                     -> Decode
   mor1kx_dmmu.v                       -> Dmmu
   mor1kx_execute_alu.v                -> Execute_alu
-  mor1kx_execute_ctrl_cappuccino.v
-  mor1kx_fetch_cappuccino.v
-  mor1kx_fetch_espresso.v
-  mor1kx_fetch_prontoespresso.v
+  mor1kx_execute_ctrl_cappuccino.v    -> Execute_ctrl_cappuccino
+  mor1kx_fetch_cappuccino.v           -> Fetch.Cappuccino
+  mor1kx_fetch_espresso.v             -> Fetch.Espresso
+  mor1kx_fetch_prontoespresso.v       -> Fetch.Pronto_espresso
   mor1kx_fetch_tcm_prontoespresso.v   -> Fetch.Tcm_prontoespress
   mor1kx_icache.v                     -> Icache
   mor1kx_immu.v                       -> Immu
   mor1kx_lsu_cappuccino.v             -> Lsu.Cappuccino
   mor1kx_lsu_espresso.v               -> Lsu.Espresso
   mor1kx_pic.v                        -> Pic
-  mor1kx_rf_cappuccino.v
+  mor1kx_rf_cappuccino.v              -> rf.Cappuccino
   mor1kx_rf_espresso.v                -> Rf.Espresso
   mor1kx_simple_dpram_sclk.v          -> Ram
   mor1kx_store_buffer.v               -> Store_buffer
@@ -266,5 +266,15 @@ module Test_Fetch_Cappuccino = struct
   let circ = G.make name X.fetch
   let () = HardCaml.Rtl.Verilog.write print_string circ
 end
+
+module Test_Execute_ctrl_cappuccino = struct
+  module M = Utils.Module_flat
+  module X = Execute_ctrl_cappuccino.Make(M)
+  module G = HardCaml.Interface.Circ(X.I)(X.O)
+  let name = "execute_ctrl_cappuccino"
+  let circ = G.make name X.execute_ctrl_cappuccino
+  let () = HardCaml.Rtl.Verilog.write print_string circ
+end
+
 
 
