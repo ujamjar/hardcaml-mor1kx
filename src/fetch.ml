@@ -404,6 +404,71 @@ module Pronto_espresso = struct
       spr_bus_ack_ic[1]
     end
 
+    type mini_cache_ctl = 
+      {
+        tag : M.Bits.t;
+        valid : M.Bits.t;
+        wr : M.Bits.t;
+      }
+
+    module Mc_o = interface
+      insn[Defines.insn_width]
+      hit[1]
+      hit_ungated[1]
+      fetch_quick_branch[1]
+    end
+
+    let mk_mini_cache ~i ~pc ~took_branch ~will_go_to_sleep = 
+      let open I in
+      let module Spr = Spr.Make(M.Bits) in
+      let module R = Regs(struct let clk = i.clk let rst = i.rst end) in
+      let number_mini_cache_words = 1 lsl M.o.icache_block_width in
+      let mini_cache_tag_end = M.o.icache_block_width+2 in
+
+      let pc_word_sel = pc.[M.o.icache_block_width+1:2] in
+      let pc_word_sel_1h = binary_to_onehot pc_word_sel in
+
+      let pc_tag = pc.[M.o.operand_width-1:mini_cache_tag_end] in
+
+      let mini_cache_fill_condition = i.ibus_ack &: (~: (i.ibus_err)) &: (~: (will_go_to_sleep)) in
+
+      let invalidate = i.spr_bus_stb &: i.spr_bus_we &: (i.spr_bus_addr ==: Spr.icbir_addr) in
+
+      let mini_cache_v = Array.init number_mini_cache_words (fun j ->
+        let c0 = invalidate(* | !ic_enable*) |: i.du_stall in
+        let c1 = mini_cache_fill_condition &: pc_word_sel_1h.[j:j] in
+        {
+          tag = R.reg_fb ~e:vdd ~w:(width pc_tag) 
+            (fun d -> (L.pmux [ c0, d; c1, pc_tag ] d));
+          valid = R.reg_fb ~e:vdd ~w:1 
+            (L.pmux [ c0, gnd; c1, vdd; ]);
+          wr = (~: c0) &: c1;
+        }
+      ) in
+
+      let mini_cache = Array.init number_mini_cache_words 
+        (fun j -> R.reg ~e:mini_cache_v.(j).wr i.ibus_dat) 
+      in
+
+      let insn = mux pc_word_sel (Array.to_list mini_cache) in
+
+      let cmux f = Array.map f mini_cache_v |> Array.to_list |> mux pc_word_sel in
+      let hit_ungated = 
+        cmux (fun x -> x.valid) &: (cmux (fun x -> x.tag) ==: pc_tag)
+      in
+
+      let hit = hit_ungated &: (~: took_branch) &:
+        (~: (i.fetch_take_exception_branch)) in
+
+      let fetch_quick_branch = took_branch &: hit in
+      
+      Mc_o.{
+        insn;
+        hit;
+        hit_ungated;
+        fetch_quick_branch;
+      }
+
     let fetch i = 
       let open I in
       let open HardCaml.Signal.Guarded in
@@ -418,26 +483,21 @@ module Pronto_espresso = struct
         g_wire gnd, g_wire gnd, g_wire gnd 
       in
 
-      (*****************************************************)
-      let mini_cache_hit_ungated = wire 1 in
-      let mini_cache_hit = wire 1 in
-      let mini_cache_insn = wire Defines.insn_width in
-      let fetch_quick_branch = wire 1 in
+      let mini_cache = Mc_o.(map (fun (_,b) -> wire b) t) in
 
       let fetch_req = wire 1 in
       let jump_insn_in_decode = wire 1 in
       let new_insn_wasnt_ready = wire 1 in
       let took_early_calc_pc = wire 1 in
       let waited_with_early_pc_onto_cache_hit = wire 1 in
-      (*****************************************************)
 
       let pc_plus_four = pc#q +:. 4 in
 
       let padv_r = R.reg ~e:vdd i.padv in
 
-      let new_insn = mux2 mini_cache_hit mini_cache_insn i.ibus_dat in
+      let new_insn = mux2 mini_cache.Mc_o.hit mini_cache.Mc_o.insn i.ibus_dat in
 
-      let new_insn_ready = mini_cache_hit |: i.ibus_ack in
+      let new_insn_ready = mini_cache.Mc_o.hit |: i.ibus_ack in
 
       let fetch_ready = new_insn_ready |: jump_insn_in_decode |: i.ibus_err in
 
@@ -488,7 +548,7 @@ module Pronto_espresso = struct
           stalled. *)
       let hold_decode_output = 
         (padv_asserted &:
-          mini_cache_hit &: took_branch_r &:
+          mini_cache.Mc_o.hit &: took_branch_r &:
           (~: new_insn_wasnt_ready) &:
           took_early_calc_pc_r.[1:1]) |:
         waited_with_early_pc_onto_cache_hit in
@@ -596,13 +656,14 @@ module Pronto_espresso = struct
           (* We'll get this ungated signal immediately after we've
              terminated a burst, so we'll know if we really should
              fetch the branch target or whether it's in cache. *)
-          mini_cache_hit_ungated;
+          mini_cache.Mc_o.hit_ungated;
         ]) vdd)
       in
 
       let took_early_pc_onto_cache_hit = R.reg_fb ~e:vdd ~w:1 
         (L.pmux [
-          i.padv, took_early_calc_pc &: mini_cache_hit &: (~: (i.fetch_take_exception_branch));
+          i.padv, took_early_calc_pc &: mini_cache.Mc_o.hit &: 
+                  (~: (i.fetch_take_exception_branch));
           i.ctrl_insn_done, gnd;
         ])
       in
@@ -645,11 +706,14 @@ module Pronto_espresso = struct
         ] complete_current_req)
       in
 
-      (* XXX mini-cache *)
-      let () = mini_cache_hit <== gnd in
-      let () = mini_cache_hit_ungated <== gnd in
-      let () = mini_cache_insn <== zero Defines.insn_width in
-      let () = fetch_quick_branch <== gnd in
+      (* mini-cache *)
+      let _ = 
+        if M.f.instructioncache then
+          let mc = mk_mini_cache ~i ~pc:pc#q ~took_branch ~will_go_to_sleep in
+          Mc_o.(map2 (fun w d -> w <== d) mini_cache mc) 
+        else
+          Mc_o.(map (fun w -> w <== (zero (width w))) mini_cache) 
+      in
 
       (* outputs *)
       let ibus_adr = pc#q in
@@ -664,7 +728,7 @@ module Pronto_espresso = struct
                         causes req to go low, after which fetch_req is deasserted
                         and should handle it *)
                       &: (~: (i.execute_waiting &: fetch_req))
-                      &: (~: mini_cache_hit_ungated)) |:
+                      &: (~: (mini_cache.Mc_o.hit_ungated))) |:
                       complete_current_req in
       let ibus_burst = gnd in
       let fetched_pc = fetched_pc#q in
@@ -684,6 +748,7 @@ module Pronto_espresso = struct
       in
 
       let fetch_sleep = sleep in
+      let fetch_quick_branch = mini_cache.Mc_o.fetch_quick_branch in
 
       let spr_bus_ack_ic = vdd in
       let spr_bus_dat_ic = zero M.o.operand_width in
