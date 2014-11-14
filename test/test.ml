@@ -20,7 +20,7 @@
   mor1kx_ctrl_espresso.v
   mor1kx_ctrl_prontoespresso.v
   mor1kx_dcache.v                     -> Dcache
-  mor1kx_decode_execute_cappuccino.v
+  mor1kx_decode_execute_cappuccino.v  -> Decode_execute_cappuccino
   mor1kx_decode.v                     -> Decode
   mor1kx_dmmu.v                       -> Dmmu
   mor1kx_execute_alu.v                -> Execute_alu

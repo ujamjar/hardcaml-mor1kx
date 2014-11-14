@@ -139,6 +139,7 @@ module Opcode : sig
 end
 
 val vector_select : int * int
+val vector_width : int 
 val reset_vector : int
 val berr_vector : int
 val dpf_vector : int

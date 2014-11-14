@@ -154,6 +154,8 @@ module Logic(B : HardCaml.Comb.S) : sig
   val sel : B.t -> (int * int) -> B.t
   val cases : B.t -> B.t -> (int * B.t) list -> B.t
   val pmux : (B.t * B.t) list -> B.t -> B.t
+  val to_array : B.t -> B.t array
+  val of_array : B.t array -> B.t
 end
 
 

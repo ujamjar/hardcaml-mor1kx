@@ -144,6 +144,7 @@ end
 
 (* Exception addresses *)
 let vector_select   = 5+8,8
+let vector_width    = 5
 let reset_vector    = 0x01
 let berr_vector     = 0x02
 let dpf_vector      = 0x03

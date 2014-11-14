@@ -476,6 +476,9 @@ module Logic(B : HardCaml.Comb.S) = struct
   let pmux list last = 
     (List.fold_left (fun f (c, d) -> (fun s -> f (mux2 c d s))) (fun s -> s) list) last
 
+  let to_array b = Array.of_list @@ List.rev @@ bits b
+  let of_array l = concat @@ List.rev @@ Array.to_list l
+
 end
 
 let g_elif c t f = HardCaml.Signal.Guarded.([ g_if c t f ])
