@@ -278,6 +278,9 @@ module Cappuccino = struct
       let open I in
       let module R = Regs(struct let clk = i.clk let rst = i.rst end) in
 
+      (* XXX *)
+      let (||:) = (|:) in
+
       let regm x0 x1 = R.reg_fb ~e:vdd ~w:1 (pmux [ x0; x1 ]) in
       let state_is, sm, next = R.statemachine ~e:vdd 
         (Enum_sm.enum_from_to Bounded_sm.min_bound Bounded_sm.max_bound)
@@ -533,9 +536,9 @@ module Cappuccino = struct
           let atomic_reserve =
             let c0 = 
               i.pipeline_flush |: 
-              (i.ctrl_op_lsu_store &: i.ctrl_op_lsu_atomic &: write_done#q |:
+              (i.ctrl_op_lsu_store &: i.ctrl_op_lsu_atomic &: write_done#q ||:
               (~: (i.ctrl_op_lsu_atomic)) &: store_buffer_write &:
-              (store_buffer_wadr ==: atomic_addr) |:
+              (store_buffer_wadr ==: atomic_addr) ||:
               (snoop_valid &: (i.snoop_adr ==: atomic_addr)))
             in
             let c1 = (i.ctrl_op_lsu_load &: i.ctrl_op_lsu_atomic &: i.padv_ctrl) in

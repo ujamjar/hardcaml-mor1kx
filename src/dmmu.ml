@@ -61,6 +61,9 @@ module Make(M : Utils.Module_cfg_signal) = struct
     let open I in
     let module R = Utils.Regs(struct let clk = i.clk let rst = i.rst end) in
   
+    (* XXX *)
+    let (||:) = (|:) in
+
     let module Ram = Ram.True_dp(struct 
       let addr_width = o.Option.dmmu_set_width
       let data_width = operand_width
@@ -92,8 +95,8 @@ module Make(M : Utils.Module_cfg_signal) = struct
 
     let pagefault = 
       (mux2 i.supervisor_mode 
-        ((~: swe) &: i.op_store |: (~: sre) &: i.op_load) 
-        ((~: uwe) &: i.op_store |: (~: ure) &: i.op_load)) &:
+        ((~: swe) &: i.op_store ||: (~: sre) &: i.op_load) 
+        ((~: uwe) &: i.op_store ||: (~: ure) &: i.op_load)) &:
       (~: tlb_reload_busy) 
     in
 

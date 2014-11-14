@@ -1,10 +1,13 @@
-<src/*.{ml,mli}>: syntax(camlp4o), package(hardcaml,hardcaml.syntax,deriving)
-<test/*.{ml,mli}>: syntax(camlp4o), package(hardcaml,hardcaml.syntax,deriving)
+<src/*.{ml,mli}>: syntax(camlp4o), package(hardcaml,hardcaml.syntax,hardcaml-vprec.syntax,deriving)
+<test/*.{ml,mli}>: syntax(camlp4o), package(hardcaml,hardcaml.syntax,hardcaml-vprec.syntax,deriving)
 
 <test/*.{byte,native}>: package(hardcaml,deriving)
 
 <src>: include
+<ext>: include
 <test>: include
+
+<ext/pa_vprec.ml>: syntax(camlp4o), package(camlp4.quotations.r), package(camlp4.extend)
 
 true: debug
 

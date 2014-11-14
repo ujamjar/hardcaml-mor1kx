@@ -1,7 +1,18 @@
+.PHONY: all ext lib tests clean
+
 all: lib tests
 
-lib:
+ext:
+	ocamlbuild -use-ocamlfind pa_vprec.cmo
+
+lib: ext
 	ocamlbuild -use-ocamlfind openrisc.cma openrisc.cmxa
+
+install_ext:
+	ocamlfind install hardcaml-vprec ext/META _build/ext/pa_vprec.cmo
+
+uninstall_ext:
+	ocamlfind remove hardcaml-vprec
 
 tests:
 	ocamlbuild -use-ocamlfind \

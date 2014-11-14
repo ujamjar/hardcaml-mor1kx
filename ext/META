@@ -1,0 +1,9 @@
+version = "1.0.0"
+description = "Verilog operator precedence"
+
+package "syntax" (
+  version = "1.0.0"
+  requires = "hardcaml.syntax,camlp4"
+  archive(syntax,preprocessor) = "pa_vprec.cmo"
+  archive(syntax,toploop) = "pa_vprec.cmo"
+)
