@@ -22,3 +22,4 @@ Store_buffer
 Rf
 Fetch
 Execute_ctrl_cappuccino
+Decode_execute_cappuccino

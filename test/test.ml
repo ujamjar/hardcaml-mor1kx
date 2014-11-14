@@ -276,5 +276,13 @@ module Test_Execute_ctrl_cappuccino = struct
   let () = HardCaml.Rtl.Verilog.write print_string circ
 end
 
+module Test_Decode_execute_cappuccino = struct
+  module M = Utils.Module_flat
+  module X = Decode_execute_cappuccino.Make(M)
+  module G = HardCaml.Interface.Circ(X.I)(X.O)
+  let name = "decode_execute_cappuccino"
+  let circ = G.make name X.decode_execute_cappuccino
+  let () = HardCaml.Rtl.Verilog.write print_string circ
+end
 
 

@@ -4,7 +4,7 @@
   of the OHDL was not distributed with this file, You
   can obtain one at http://juliusbaxter.net/ohdl/ohdl.txt
 
-  Copyright (C) 2012 Authors
+  Copyright (C) 2014 Authors
 
   Author(s): Andy Ray <andy.ray@ujamjar.com>
 
