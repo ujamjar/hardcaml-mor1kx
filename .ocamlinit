@@ -7,6 +7,5 @@ module R = Utils.Regs(struct
   let rst = HardCaml.Signal.Comb.reset
 end)
 
-open HardCaml
-module B = Bits.Comb.IntbitsList
-module S = Signal.Comb
+module B = HardCaml.Bits.Comb.IntbitsList
+module S = HardCaml.Signal.Comb

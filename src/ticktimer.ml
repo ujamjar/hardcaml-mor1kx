@@ -37,9 +37,9 @@ module Make(M : Utils.Module_cfg_signal) = struct
     let spr_ttmr = R.g_reg ~e:vdd 32 in
     let spr_ttcr = R.g_reg ~e:vdd 32 in
 
-    let cmp_spr_access x = i.spr_access &: (M.Spr.offset i.spr_addr ==: M.Spr.offset x) in 
-    let spr_ttmr_access = cmp_spr_access M.Spr.ttmr_addr in
-    let spr_ttcr_access = cmp_spr_access M.Spr.ttcr_addr in
+    let cmp_spr_access x = i.spr_access &: (M.Spr.offset i.spr_addr ==:. x) in 
+    let spr_ttmr_access = cmp_spr_access M.Spr.Tt.ttmr in
+    let spr_ttcr_access = cmp_spr_access M.Spr.Tt.ttcr in
 
 
     let spr_bus_ack = i.spr_access in

@@ -156,6 +156,8 @@ module Logic(B : HardCaml.Comb.S) : sig
   val pmux : (B.t * B.t) list -> B.t -> B.t
   val to_array : B.t -> B.t array
   val of_array : B.t array -> B.t
+  val (||:) : B.t -> B.t -> B.t
+  val (&&:) : B.t -> B.t -> B.t
 end
 
 

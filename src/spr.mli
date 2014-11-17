@@ -13,107 +13,146 @@ module Make(B : HardCaml.Comb.S) : sig
   val base : B.t -> B.t
   val offset : B.t -> B.t
 
+  val base_width : int
+  val offset_width : int
+
   (* Addresses *)
-  val sys_base : B.t
-  val vr_addr : B.t
-  val upr_addr : B.t
-  val cpucfgr_addr : B.t
-  val dmmucfgr_addr : B.t
-  val immucfgr_addr : B.t
-  val dccfgr_addr : B.t
-  val iccfgr_addr : B.t
-  val dcfgr_addr : B.t
-  val pccfgr_addr : B.t
-  val vr2_addr : B.t
-  val avr_addr : B.t
-  val evbar_addr : B.t
-  val aecr_addr : B.t
-  val aesr_addr : B.t
-  val npc_addr : B.t
-  val sr_addr : B.t
-  val ppc_addr : B.t
-  val fpcsr_addr : B.t
-  val isr0_addr : B.t
-  val epcr0_addr : B.t
-  val eear0_addr : B.t
-  val esr0_addr : B.t
-  val coreid_addr : B.t
-  val numcores_addr : B.t
-  val gpr0_addr : B.t
+  module Sys : sig
+    val base : int
+    val const : int -> B.t
+    val vr : int
+    val upr : int
+    val cpucfgr : int
+    val dmmucfgr : int
+    val immucfgr : int
+    val dccfgr : int
+    val iccfgr : int
+    val dcfgr : int
+    val pccfgr : int
+    val vr2 : int
+    val avr : int
+    val evbar : int
+    val aecr : int
+    val aesr : int
+    val npc : int
+    val sr : int
+    val ppc : int
+    val fpcsr : int
+    val isr0 : int
+    val epcr0 : int
+    val eear0 : int
+    val esr0 : int
+    val coreid : int
+    val numcores : int
+    val gpr0 : int
+  end
 
-  val dmmu_base : B.t
-  val dmmucr_addr : B.t
-  val dmmupr_addr : B.t
-  val dtlbeir_addr : B.t
-  val datbmr0_addr : B.t
-  val datbtr0_addr : B.t
-  val dtlbw0mr0_addr : B.t
-  val dtlbw0tr0_addr : B.t
-  val dtlbw1mr0_addr : B.t
-  val dtlbw1tr0_addr : B.t
-  val dtlbw2mr0_addr : B.t
-  val dtlbw2tr0_addr : B.t
-  val dtlbw3mr0_addr : B.t
-  val dtlbw3tr0_addr : B.t
+  module Dmmu : sig
+    val base : int
+    val const : int -> B.t
+    val dmmucr : int
+    val dmmupr : int
+    val dtlbeir : int
+    val datbmr0 : int
+    val datbtr0 : int
+    val dtlbw0mr0 : int
+    val dtlbw0tr0 : int
+    val dtlbw1mr0 : int
+    val dtlbw1tr0 : int
+    val dtlbw2mr0 : int
+    val dtlbw2tr0 : int
+    val dtlbw3mr0 : int
+    val dtlbw3tr0 : int
+  end
 
-  val immu_base : B.t
-  val immucr_addr : B.t
-  val immupr_addr : B.t
-  val itlbeir_addr : B.t
-  val iatbmr0_addr : B.t
-  val iatbtr0_addr : B.t
-  val itlbw0mr0_addr : B.t
-  val itlbw0tr0_addr : B.t
-  val itlbw1mr0_addr : B.t
-  val itlbw1tr0_addr : B.t
-  val itlbw2mr0_addr : B.t
-  val itlbw2tr0_addr : B.t
-  val itlbw3mr0_addr : B.t
-  val itlbw3tr0_addr : B.t
+  module Immu : sig
+    val base : int
+    val const : int -> B.t
+    val immucr : int
+    val immupr : int
+    val itlbeir : int
+    val iatbmr0 : int
+    val iatbtr0 : int
+    val itlbw0mr0 : int
+    val itlbw0tr0 : int
+    val itlbw1mr0 : int
+    val itlbw1tr0 : int
+    val itlbw2mr0 : int
+    val itlbw2tr0 : int
+    val itlbw3mr0 : int
+    val itlbw3tr0 : int
+  end
 
-  val dc_base : B.t
-  val dccr_addr : B.t
-  val dcbpr_addr : B.t
-  val dcbfr_addr : B.t
-  val dcbir_addr : B.t
-  val dcbwr_addr : B.t
-  val dcblr_addr : B.t
+  module Dc : sig
+    val base : int
+    val const : int -> B.t
+    val dccr : int
+    val dcbpr : int
+    val dcbfr : int
+    val dcbir : int
+    val dcbwr : int
+    val dcblr : int
+  end
 
-  val ic_base : B.t
-  val iccr_addr : B.t
-  val icbpr_addr : B.t
-  val icbir_addr : B.t
-  val icblr_addr : B.t
+  module Ic : sig
+    val base : int
+    val const : int -> B.t
+    val iccr : int
+    val icbpr : int
+    val icbir : int
+    val icblr : int
+  end
 
-  val mac_base : B.t
-  val maclo_addr : B.t
-  val machi_addr : B.t
+  module Mac : sig
+    val base : int
+    val const : int -> B.t
+    val maclo : int
+    val machi : int
+  end
 
-  val du_base : B.t
-  val dvr0_addr : B.t
-  val dcr0_addr : B.t
-  val dmr1_addr : B.t
-  val dmr2_addr : B.t
-  val dcwr0_addr : B.t
-  val dsr_addr : B.t
-  val drr_addr : B.t
+  module Du : sig
+    val base : int
+    val const : int -> B.t
+    val dvr0 : int
+    val dcr0 : int
+    val dmr1 : int
+    val dmr2 : int
+    val dcwr0 : int
+    val dsr : int
+    val drr : int
+  end
 
-  val pc_base : B.t
-  val pccr0_addr : B.t
-  val pcmr0_addr : B.t
+  module Pc : sig
+    val base : int
+    val const : int -> B.t
+    val pccr0 : int
+    val pcmr0 : int
+  end
 
-  val pm_base : B.t
-  val pmr_addr : B.t
+  module Pm : sig
+    val base : int
+    val const : int -> B.t
+    val pmr : int
+  end
 
-  val pic_base : B.t
-  val picmr_addr : B.t
-  val picsr_addr : B.t
+  module Pic : sig
+    val base : int
+    val const : int -> B.t
+    val picmr : int
+    val picsr : int
+  end
 
-  val tt_base : B.t
-  val ttmr_addr : B.t
-  val ttcr_addr : B.t
+  module Tt : sig
+    val base : int
+    val const : int -> B.t
+    val ttmr : int
+    val ttcr : int
+  end
 
-  val fpu_base : B.t
+  module Fpu : sig
+    val base : int
+    val const : int -> B.t
+  end
 
   (* Register bit defines *)
 

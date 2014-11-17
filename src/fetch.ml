@@ -456,7 +456,10 @@ module Pronto_espresso = struct
 
       let mini_cache_fill_condition = i.ibus_ack &: (~: (i.ibus_err)) &: (~: (will_go_to_sleep)) in
 
-      let invalidate = i.spr_bus_stb &: i.spr_bus_we &: (i.spr_bus_addr ==: Spr.icbir_addr) in
+      let invalidate = 
+        i.spr_bus_stb &: i.spr_bus_we &: 
+        (i.spr_bus_addr ==: Spr.Ic.(const icbir)) 
+      in
 
       let mini_cache_v = Array.init number_mini_cache_words (fun j ->
         let c0 = invalidate(* | !ic_enable*) |: i.du_stall in

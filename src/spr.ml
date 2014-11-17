@@ -20,107 +20,146 @@ module Make(B : HardCaml.Comb.S) = struct
   let base x = x.[15:11]
   let offset x = x.[10:0]
 
+  let base_width = 5
+  let offset_width = 11
+
   (* Addresses *)
-  let sys_base       = consti 5 0
-  let vr_addr        = sys_base @: consti 11 0
-  let upr_addr       = sys_base @: consti 11 1
-  let cpucfgr_addr   = sys_base @: consti 11 2
-  let dmmucfgr_addr  = sys_base @: consti 11 3
-  let immucfgr_addr  = sys_base @: consti 11 4
-  let dccfgr_addr    = sys_base @: consti 11 5
-  let iccfgr_addr    = sys_base @: consti 11 6
-  let dcfgr_addr     = sys_base @: consti 11 7
-  let pccfgr_addr    = sys_base @: consti 11 8
-  let vr2_addr       = sys_base @: consti 11 9
-  let avr_addr       = sys_base @: consti 11 10
-  let evbar_addr     = sys_base @: consti 11 11
-  let aecr_addr      = sys_base @: consti 11 12
-  let aesr_addr      = sys_base @: consti 11 13
-  let npc_addr       = sys_base @: consti 11 16
-  let sr_addr        = sys_base @: consti 11 17
-  let ppc_addr       = sys_base @: consti 11 18
-  let fpcsr_addr     = sys_base @: consti 11 20
-  let isr0_addr      = sys_base @: consti 11 21
-  let epcr0_addr     = sys_base @: consti 11 32
-  let eear0_addr     = sys_base @: consti 11 48
-  let esr0_addr      = sys_base @: consti 11 64
-  let coreid_addr    = sys_base @: consti 11 128
-  let numcores_addr  = sys_base @: consti 11 129
-  let gpr0_addr      = sys_base @: consti 11 1024
+  module Sys = struct
+    let base      = 0
+    let const x   = consti base_width base @: consti offset_width x
+    let vr        = 0
+    let upr       = 1
+    let cpucfgr   = 2
+    let dmmucfgr  = 3
+    let immucfgr  = 4
+    let dccfgr    = 5
+    let iccfgr    = 6
+    let dcfgr     = 7
+    let pccfgr    = 8
+    let vr2       = 9
+    let avr       = 10
+    let evbar     = 11
+    let aecr      = 12
+    let aesr      = 13
+    let npc       = 16
+    let sr        = 17
+    let ppc       = 18
+    let fpcsr     = 20
+    let isr0      = 21
+    let epcr0     = 32
+    let eear0     = 48
+    let esr0      = 64
+    let coreid    = 128
+    let numcores  = 129
+    let gpr0      = 1024
+  end
 
-  let dmmu_base      = consti 5 1
-  let dmmucr_addr    = dmmu_base @: consti 11 0
-  let dmmupr_addr    = dmmu_base @: consti 11 1
-  let dtlbeir_addr   = dmmu_base @: consti 11 2
-  let datbmr0_addr   = dmmu_base @: consti 11 4
-  let datbtr0_addr   = dmmu_base @: consti 11 8
-  let dtlbw0mr0_addr = dmmu_base @: consti 11 512
-  let dtlbw0tr0_addr = dmmu_base @: consti 11 640
-  let dtlbw1mr0_addr = dmmu_base @: consti 11 768
-  let dtlbw1tr0_addr = dmmu_base @: consti 11 896
-  let dtlbw2mr0_addr = dmmu_base @: consti 11 1024
-  let dtlbw2tr0_addr = dmmu_base @: consti 11 1152
-  let dtlbw3mr0_addr = dmmu_base @: consti 11 1280
-  let dtlbw3tr0_addr = dmmu_base @: consti 11 1408
+  module Dmmu = struct
+    let base      = 1
+    let const x   = consti base_width base @: consti offset_width x
+    let dmmucr    = 0
+    let dmmupr    = 1
+    let dtlbeir   = 2
+    let datbmr0   = 4
+    let datbtr0   = 8
+    let dtlbw0mr0 = 512
+    let dtlbw0tr0 = 640
+    let dtlbw1mr0 = 768
+    let dtlbw1tr0 = 896
+    let dtlbw2mr0 = 1024
+    let dtlbw2tr0 = 1152
+    let dtlbw3mr0 = 1280
+    let dtlbw3tr0 = 1408
+  end
 
-  let immu_base      = consti 5 2
-  let immucr_addr    = immu_base @: consti 11 0
-  let immupr_addr    = immu_base @: consti 11 1
-  let itlbeir_addr   = immu_base @: consti 11 2
-  let iatbmr0_addr   = immu_base @: consti 11 4
-  let iatbtr0_addr   = immu_base @: consti 11 8
-  let itlbw0mr0_addr = immu_base @: consti 11 512
-  let itlbw0tr0_addr = immu_base @: consti 11 640
-  let itlbw1mr0_addr = immu_base @: consti 11 768
-  let itlbw1tr0_addr = immu_base @: consti 11 896
-  let itlbw2mr0_addr = immu_base @: consti 11 1024
-  let itlbw2tr0_addr = immu_base @: consti 11 1152
-  let itlbw3mr0_addr = immu_base @: consti 11 1280
-  let itlbw3tr0_addr = immu_base @: consti 11 1408
+  module Immu = struct
+    let base      = 2
+    let const x   = consti base_width base @: consti offset_width x
+    let immucr    = 0
+    let immupr    = 1
+    let itlbeir   = 2
+    let iatbmr0   = 4
+    let iatbtr0   = 8
+    let itlbw0mr0 = 512
+    let itlbw0tr0 = 640
+    let itlbw1mr0 = 768
+    let itlbw1tr0 = 896
+    let itlbw2mr0 = 1024
+    let itlbw2tr0 = 1152
+    let itlbw3mr0 = 1280
+    let itlbw3tr0 = 1408
+  end
 
-  let dc_base        = consti 5 3
-  let dccr_addr      = dc_base @: consti 11 0
-  let dcbpr_addr     = dc_base @: consti 11 1
-  let dcbfr_addr     = dc_base @: consti 11 2
-  let dcbir_addr     = dc_base @: consti 11 3
-  let dcbwr_addr     = dc_base @: consti 11 4
-  let dcblr_addr     = dc_base @: consti 11 5
+  module Dc = struct
+    let base      = 3
+    let const x   = consti base_width base @: consti offset_width x
+    let dccr      = 0
+    let dcbpr     = 1
+    let dcbfr     = 2
+    let dcbir     = 3
+    let dcbwr     = 4
+    let dcblr     = 5
+  end
 
-  let ic_base        = consti 5 4
-  let iccr_addr      = ic_base @: consti 11 0
-  let icbpr_addr     = ic_base @: consti 11 1
-  let icbir_addr     = ic_base @: consti 11 2
-  let icblr_addr     = ic_base @: consti 11 3
+  module Ic = struct
+    let base      = 4
+    let const x   = consti base_width base @: consti offset_width x
+    let iccr      = 0
+    let icbpr     = 1
+    let icbir     = 2
+    let icblr     = 3
+  end
 
-  let mac_base       = consti 5 5
-  let maclo_addr     = mac_base @: consti 11 1
-  let machi_addr     = mac_base @: consti 11 2
+  module Mac = struct
+    let base      = 5
+    let const x   = consti base_width base @: consti offset_width x
+    let maclo     = 1
+    let machi     = 2
+  end
 
-  let du_base        = consti 5 6
-  let dvr0_addr      = du_base @: consti 11 0
-  let dcr0_addr      = du_base @: consti 11 8
-  let dmr1_addr      = du_base @: consti 11 16
-  let dmr2_addr      = du_base @: consti 11 17
-  let dcwr0_addr     = du_base @: consti 11 18
-  let dsr_addr       = du_base @: consti 11 20
-  let drr_addr       = du_base @: consti 11 21
+  module Du = struct
+    let base      = 6
+    let const x   = consti base_width base @: consti offset_width x
+    let dvr0      = 0
+    let dcr0      = 8
+    let dmr1      = 16
+    let dmr2      = 17
+    let dcwr0     = 18
+    let dsr       = 20
+    let drr       = 21
+  end
 
-  let pc_base        = consti 5 7
-  let pccr0_addr     = pc_base @: consti 11 0
-  let pcmr0_addr     = pc_base @: consti 11 8
+  module Pc = struct
+    let base      = 7
+    let const x   = consti base_width base @: consti offset_width x
+    let pccr0     = 0
+    let pcmr0     = 8
+  end
 
-  let pm_base        = consti 5 8
-  let pmr_addr       = pm_base @: consti 11 0
+  module Pm = struct
+    let base      = 8
+    let const x   = consti base_width base @: consti offset_width x
+    let pmr       = 0
+  end
 
-  let pic_base       = consti 5 9
-  let picmr_addr     = pic_base @: consti 11 0
-  let picsr_addr     = pic_base @: consti 11 2
+  module Pic = struct
+    let base      = 9
+    let const x   = consti base_width base @: consti offset_width x
+    let picmr     = 0
+    let picsr     = 2
+  end
 
-  let tt_base        = consti 5 10
-  let ttmr_addr      = tt_base @: consti 11 0
-  let ttcr_addr      = tt_base @: consti 11 1
+  module Tt = struct
+    let base      = 10
+    let const x   = consti base_width base @: consti offset_width x
+    let ttmr      = 0
+    let ttcr      = 1
+  end
 
-  let fpu_base       = consti 5 11
+  module Fpu = struct
+    let base      = 11
+    let const x   = consti base_width base @: consti offset_width x
+  end
 
   (* Register bit defines *)
 

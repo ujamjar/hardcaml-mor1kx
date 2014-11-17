@@ -114,6 +114,7 @@ type features =
     delayslot          : bool;
     evbar              : bool;
     aecsr              : bool;
+    fpu                : bool;
   }
 
 val default_options : options

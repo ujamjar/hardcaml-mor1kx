@@ -278,9 +278,6 @@ module Cappuccino = struct
       let open I in
       let module R = Regs(struct let clk = i.clk let rst = i.rst end) in
 
-      (* XXX *)
-      let (||:) = (|:) in
-
       let regm x0 x1 = R.reg_fb ~e:vdd ~w:1 (pmux [ x0; x1 ]) in
       let state_is, sm, next = R.statemachine ~e:vdd 
         (Enum_sm.enum_from_to Bounded_sm.min_bound Bounded_sm.max_bound)

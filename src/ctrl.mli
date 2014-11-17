@@ -44,9 +44,9 @@ module Espresso : sig
       overflow_clear
       du_addr
       du_stb
-      du_dat
+      du_dat_i
       du_we
-      du_stall
+      du_stall_i
       spr_bus_dat_dc
       spr_bus_ack_dc
       spr_bus_dat_ic
@@ -82,9 +82,9 @@ module Espresso : sig
       exception_taken
       execute_waiting
       stepping
-      du_dat
+      du_dat_o
       du_ack
-      du_stall
+      du_stall_o
       du_restart_pc
       du_restart
       spr_bus_addr
@@ -94,6 +94,7 @@ module Espresso : sig
       spr_sr
       ctrl_branch_occur
       rf_we
+      ctrl_branch_target
     end
 
     val ctrl : M.Bits.t I.t -> M.Bits.t O.t

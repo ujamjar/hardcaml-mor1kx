@@ -479,6 +479,9 @@ module Logic(B : HardCaml.Comb.S) = struct
   let to_array b = Array.of_list @@ List.rev @@ bits b
   let of_array l = concat @@ List.rev @@ Array.to_list l
 
+  let (||:) a b = (reduce (|:) @@ bits a) |: (reduce (|:) @@ bits b)
+  let (&&:) a b = (reduce (|:) @@ bits a) &: (reduce (|:) @@ bits b)
+
 end
 
 let g_elif c t f = HardCaml.Signal.Guarded.([ g_if c t f ])

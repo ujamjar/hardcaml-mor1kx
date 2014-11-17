@@ -83,8 +83,8 @@ module Make(M : Utils.Module_cfg_signal) = struct
     let open HardCaml.Signal.Guarded in
     let module R = Regs(struct let clk = i.clk let rst = i.rst end) in
 
-    let spr_picmr_access = i.spr_access &: M.Spr.(offset i.spr_addr ==: offset picmr_addr) in
-    let spr_picsr_access = i.spr_access &: M.Spr.(offset i.spr_addr ==: offset picsr_addr) in
+    let spr_picmr_access = i.spr_access &: M.(Spr.offset i.spr_addr ==:. Spr.Pic.picmr) in
+    let spr_picsr_access = i.spr_access &: M.(Spr.offset i.spr_addr ==:. Spr.Pic.picsr) in
     
     let spr_picmr =
       let nmi_mask x = 

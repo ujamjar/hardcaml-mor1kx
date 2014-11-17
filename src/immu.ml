@@ -98,11 +98,11 @@ module Make(M : Utils.Module_cfg_signal) = struct
       (~: tlb_reload_busy) &: (~: busy) in
 
     let itlb_match_spr_cs = i.spr_bus_stb &:
-      (i.spr_bus_addr >=: M.Spr.itlbw0mr0_addr) &:
-      (i.spr_bus_addr <: M.Spr.itlbw0tr0_addr) in
+      (i.spr_bus_addr >=: M.Spr.Immu.(const itlbw0mr0)) &:
+      (i.spr_bus_addr <: M.Spr.Immu.(const itlbw0tr0)) in
     let itlb_trans_spr_cs = i.spr_bus_stb &:
-      (i.spr_bus_addr >=: M.Spr.itlbw0tr0_addr) &:
-      (i.spr_bus_addr <: M.Spr.itlbw1mr0_addr) in
+      (i.spr_bus_addr >=: M.Spr.Immu.(const itlbw0tr0)) &:
+      (i.spr_bus_addr <: M.Spr.Immu.(const itlbw1mr0)) in
 
     let itlb_match_addr = 
       mux2 (itlb_match_spr_cs &: (~: spr_bus_ack))
@@ -132,7 +132,7 @@ module Make(M : Utils.Module_cfg_signal) = struct
 
     let immucr_spr_cs, immucr = 
       if f.Option.immu_hw_tlb_reload then
-        let cs = i.spr_bus_stb &: (i.spr_bus_addr ==: M.Spr.immucr_addr) in
+        let cs = i.spr_bus_stb &: (i.spr_bus_addr ==: M.Spr.Immu.(const immucr)) in
         cs, R.reg ~e:(cs &: i.spr_bus_we) i.spr_bus_dat_i
       else
         gnd, zero operand_width

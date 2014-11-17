@@ -60,9 +60,6 @@ module Make(M : Utils.Module_cfg_signal) = struct
   let dmmu i = 
     let open I in
     let module R = Utils.Regs(struct let clk = i.clk let rst = i.rst end) in
-  
-    (* XXX *)
-    let (||:) = (|:) in
 
     let module Ram = Ram.True_dp(struct 
       let addr_width = o.Option.dmmu_set_width
@@ -101,18 +98,18 @@ module Make(M : Utils.Module_cfg_signal) = struct
     in
 
     let dtlb_match_spr_cs = i.spr_bus_stb &:
-            (i.spr_bus_addr >=: M.Spr.dtlbw0mr0_addr) &:
-            (i.spr_bus_addr <: M.Spr.dtlbw0tr0_addr) in
+            (i.spr_bus_addr >=: M.Spr.Dmmu.(const dtlbw0mr0)) &:
+            (i.spr_bus_addr <:  M.Spr.Dmmu.(const dtlbw0tr0)) in
     let dtlb_trans_spr_cs = i.spr_bus_stb &:
-            (i.spr_bus_addr >=: M.Spr.dtlbw0tr0_addr) &:
-            (i.spr_bus_addr <: M.Spr.dtlbw1mr0_addr) in
+            (i.spr_bus_addr >=: M.Spr.Dmmu.(const dtlbw0tr0)) &:
+            (i.spr_bus_addr <:  M.Spr.Dmmu.(const dtlbw1mr0)) in
 
     let dtlb_match_spr_cs_r = R.reg ~e:vdd dtlb_match_spr_cs in
     let dtlb_trans_spr_cs_r = R.reg ~e:vdd dtlb_trans_spr_cs in
 
     let dmmucr_spr_cs, dmmucr_spr_cs_r, dmmucr = 
       if f.Option.dmmu_hw_tlb_reload then 
-        let dmmucr_spr_cs = i.spr_bus_stb &: (i.spr_bus_addr ==: M.Spr.dmmucr_addr) in
+        let dmmucr_spr_cs = i.spr_bus_stb &: (i.spr_bus_addr ==: M.Spr.Dmmu.(const dmmucr)) in
         dmmucr_spr_cs, R.reg ~e:vdd dmmucr_spr_cs, 
         R.reg ~e:(dmmucr_spr_cs &: i.spr_bus_we) i.spr_bus_dat_i
       else

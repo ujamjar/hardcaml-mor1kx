@@ -196,7 +196,10 @@ module Make(M : Utils.Module_cfg_signal) = struct
       refill)
     in
 
-    let invalidate_o = i.spr_bus_stb &: i.spr_bus_we &: (i.spr_bus_addr ==: M.Spr.icbir_addr) in
+    let invalidate_o = 
+      i.spr_bus_stb &: i.spr_bus_we &: 
+      (i.spr_bus_addr ==: M.Spr.Ic.(const icbir)) 
+    in
 
     let g_for len g = 
       g_proc @@ Array.to_list @@ Array.init len (fun i -> g i)

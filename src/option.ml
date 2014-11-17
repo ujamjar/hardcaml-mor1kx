@@ -116,6 +116,7 @@ type features =
     delayslot          : bool;
     evbar              : bool;
     aecsr              : bool;
+    fpu                : bool;
   }
 
 let default_options = 
@@ -193,5 +194,6 @@ let default_features =
     delayslot           = false;
     evbar               = false;
     aecsr               = false;
+    fpu                 = false;
   }
 

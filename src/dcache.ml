@@ -291,7 +291,8 @@ module Make(M : Utils.Module_cfg_signal) = struct
 
     (* An invalidate request is either a block flush or a block invalidate *)
     let invalidate = i.spr_bus_stb &: i.spr_bus_we &:
-      ((i.spr_bus_addr ==: M.Spr.dcbfr_addr) |: (i.spr_bus_addr ==: M.Spr.dcbir_addr)) in
+      ((i.spr_bus_addr ==: M.Spr.Dc.(const dcbfr)) |: 
+       (i.spr_bus_addr ==: M.Spr.Dc.(const dcbir))) in
 
     (* Acknowledge to the SPR bus. *)
     let spr_bus_ack = invalidate_ack#q in
