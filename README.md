@@ -2,6 +2,11 @@
 
 A port of the _mor1kx_ OpenRISC 1200 implementation to HardCaml.
 
+*STATUS* most is code ported, but totally untested.  The plan is 
+to generate submodules individually, then insert them into the mor1kx 
+rtl and check all outputs against the verilog model.  Fix and repeat
+until everything works.
+
 # License
 
 The original code is covered by the _Open-Hardware-Description-License_.
@@ -23,7 +28,7 @@ This port is also covered by that license.
   mor1kx_cpu_prontoespresso.v
   mor1kx_cpu.v
   mor1kx_ctrl_cappuccino.v
-  mor1kx_ctrl_espresso.v
+  mor1kx_ctrl_espresso.v              -> Ctrl.Espresso, Debugunit.Espresso
   mor1kx_ctrl_prontoespresso.v
   mor1kx_dcache.v                     -> Dcache
   mor1kx_decode_execute_cappuccino.v  -> Decode_execute_cappuccino
@@ -78,6 +83,7 @@ $ make ext install_ext
 * True dual port RAM cannot be described in HardCaml.  There's a working hack, but we
   really need vendor RAM implementations to do this properly.
 
-* There are some very minor differences relatied to reset behaviour that will need to be
+* There are some very minor differences related to reset behaviour that will need to be
   checked.
 
+* (<==\) operator isnt going to work as hoped.  Used in serial multiplier.  Needs rewrite.
