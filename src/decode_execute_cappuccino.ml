@@ -1,3 +1,23 @@
+(* ****************************************************************************
+  This Source Code Form is subject to the terms of the
+  Open Hardware Description License, v. 1.0. If a copy
+  of the OHDL was not distributed with this file, You
+  can obtain one at http://juliusbaxter.net/ohdl/ohdl.txt
+
+  Description: Cappuccino decode to execute module.
+  - Decode to execute stage signal passing.
+  - Branches are resolved (in decode stage).
+  - Hazards that can not be resolved by bypassing are detected and
+    bubbles are inserted on such conditions.
+
+  Generate valid signal when stage is done.
+
+  Copyright (C) 2012 Julius Baxter <juliusbaxter@gmail.com>
+  Copyright (C) 2013 Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>
+  Copyright (C) 2014 Andy Ray <andy.ray@ujamjar.com>
+
+***************************************************************************** *)
+
 open Option
 
 module Make(M : Utils.Module_cfg_signal) = struct
