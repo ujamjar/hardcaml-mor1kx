@@ -3,8 +3,6 @@ open Option
 
 module U(B : HardCaml.Comb.S) = struct
   open B
-  module L = Utils.Logic(B)
-  open L
 
   let bsel length adr = mux length [
     mux adr.[1:0] (List.map (consti 4) [ 0b1000; 0b0100; 0b0010; 0b0001]);
@@ -54,8 +52,6 @@ module Espresso = struct
 
     open M.Bits
     module U = U(M.Bits)
-    module L = Utils.Logic(M.Bits)
-    open L
 
     let operand_width = M.o.operand_width
 
@@ -204,8 +200,6 @@ module Cappuccino = struct
 
     open M.Bits
     module U = U(M.Bits)
-    module L = Utils.Logic(M.Bits)
-    open L
 
     open HardCaml.Signal.Guarded
 

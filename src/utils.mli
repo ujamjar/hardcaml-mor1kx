@@ -7,7 +7,7 @@
   Copyright (C) 2014 Andy Ray <andy.ray@ujamjar.com>
 
 ***************************************************************************** *)
-
+(*
 module Multiram : sig
   open HardCaml.Signal.Types
   open HardCaml.Signal.Comb
@@ -139,12 +139,12 @@ module type Seq = sig
 end
 
 module Make_seq(S : Spec) : Seq
-
+*)
 module Regs(S : sig 
   val clk : HardCaml.Signal.Comb.t
   val rst : HardCaml.Signal.Comb.t
-end) : Seq
-
+end) : HardCaml.Signal.Seq
+(*
 module Logic(B : HardCaml.Comb.S) : sig
   val drop_bottom : B.t -> int -> B.t
   val drop_top : B.t -> int -> B.t
@@ -165,7 +165,9 @@ val g_elif : HardCaml.Signal.Comb.t ->
   HardCaml.Signal.Guarded.statement list ->
   HardCaml.Signal.Guarded.statement list ->
   HardCaml.Signal.Guarded.statement list
+*)
 
+(* XXX REMOVE ME *)
 val ($==\) :
   HardCaml.Signal.Guarded.variable * int -> 
   HardCaml.Signal.Types.signal -> HardCaml.Signal.Guarded.statement

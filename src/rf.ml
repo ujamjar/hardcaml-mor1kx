@@ -129,7 +129,6 @@ module Cappuccino = struct
   module Make(M : Utils.Module_cfg_signal) = struct
 
     open M.Bits
-    module L = Utils.Logic(M.Bits)
 
     module I = interface
       clk[1]
@@ -179,7 +178,7 @@ module Cappuccino = struct
         | _ as x -> HardCaml.Utils.clog2 x
       in *)
 
-      let rifel l = R.reg_fb ~e:vdd ~w:(width @@ snd @@ List.hd l) (L.pmux l) in
+      let rifel l = R.reg_fb ~e:vdd ~w:(width @@ snd @@ List.hd l) (pmux l) in
 
       (* Keep track of the flush signal, this is needed to not wrongly assert
           execute_hazard after an exception (or rfe) has happened.

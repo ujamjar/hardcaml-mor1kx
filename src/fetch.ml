@@ -42,7 +42,6 @@ module Tcm_pronto_espresso = struct
 
   module Make(M : Utils.Module_cfg_signal) = struct
     
-    module L = Utils.Logic(M.Bits)
     open M.Bits
 
     module I = interface
@@ -265,8 +264,8 @@ module Tcm_pronto_espresso = struct
       (* Pick out opcode of next instruction to go to decode stage *)
       let next_insn_opcode = 
           mux2 insn_buffered#q
-            (L.sel insn_buffer Defines.Opcode.select)
-            (L.sel i.ibus_dat Defines.Opcode.select)
+            (sel insn_buffer Defines.Opcode.select)
+            (sel i.ibus_dat Defines.Opcode.select)
       in
 
       let cmap = List.map (fun (a,b) -> consti Defines.Opcode.width a, b) in
@@ -323,13 +322,13 @@ module Tcm_pronto_espresso = struct
 
       let fetch_rfa_adr = 
         mux2 insn_buffered#q
-          (L.sel insn_buffer Defines.ra_select)
-          (L.sel i.ibus_dat Defines.ra_select) 
+          (sel insn_buffer Defines.ra_select)
+          (sel i.ibus_dat Defines.ra_select) 
       in
       let fetch_rfb_adr = 
         mux2 insn_buffered#q
-          (L.sel insn_buffer Defines.rb_select)
-          (L.sel i.ibus_dat Defines.rb_select) 
+          (sel insn_buffer Defines.rb_select)
+          (sel i.ibus_dat Defines.rb_select) 
       in
       let fetch_rf_re = 
         (i.ibus_ack |: execute_waiting_deasserted) &: (i.padv |: i.stepping) 
@@ -381,7 +380,6 @@ module Pronto_espresso = struct
   ***************************************************************************** *)
 
   module Make(M : Utils.Module_cfg_signal) = struct
-    module L = Utils.Logic(M.Bits)
     open M.Bits
 
     module I = interface 
@@ -466,9 +464,9 @@ module Pronto_espresso = struct
         let c1 = mini_cache_fill_condition &: pc_word_sel_1h.[j:j] in
         {
           tag = R.reg_fb ~e:vdd ~w:(width pc_tag) 
-            (fun d -> (L.pmux [ c0, d; c1, pc_tag ] d));
+            (fun d -> (pmux [ c0, d; c1, pc_tag ] d));
           valid = R.reg_fb ~e:vdd ~w:1 
-            (L.pmux [ c0, gnd; c1, vdd; ]);
+            (pmux [ c0, gnd; c1, vdd; ]);
           wr = (~: c0) &: c1;
         }
       ) in
@@ -534,13 +532,13 @@ module Pronto_espresso = struct
       let took_branch_r = R.reg ~e:vdd took_branch in
 
       (* Pick out opcode of next instruction to go to decode stage *)
-      let next_insn_opcode = L.sel new_insn Defines.Opcode.select in
+      let next_insn_opcode = sel new_insn Defines.Opcode.select in
 
       (* Can calculate next PC based on instruction coming in *)
       let early_pc_next = 
         let pci = 
           repeat new_insn.[25:25] 4 @: 
-          L.sel new_insn Defines.jumpbranch_immediate_select @:
+          sel new_insn Defines.jumpbranch_immediate_select @:
           zero 2
         in
         (pci +: pc#q) &: (repeat have_early_pc_next#q M.o.operand_width)
@@ -551,7 +549,7 @@ module Pronto_espresso = struct
       let will_go_to_sleep = have_early_pc_next#q &: (early_pc_next ==: pc#q) in
 
       let sleep = R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           i.fetch_take_exception_branch |: i.du_stall, gnd;
           will_go_to_sleep &: (~: (i.stepping)), vdd;
         ])
@@ -631,7 +629,7 @@ module Pronto_espresso = struct
       ] in
 
       let () = new_insn_wasnt_ready <== R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           (i.branch_occur &: (~: took_early_calc_pc)), ~: new_insn_ready;
           (new_insn_ready &: (i.padv |: i.stepping) &: (~: padv_deasserted)), gnd;
         ])
@@ -647,7 +645,7 @@ module Pronto_espresso = struct
       in
 
       let decode_insn = R.reg_fb ~rv:nop ~cv:nop ~e:vdd ~w:M.o.operand_width
-        (L.pmux [
+        (pmux [
           (sleep |: i.du_stall), nop;
           (next_instruction_to_decode_condition), new_insn;
           (* We've just taken a branch, put a nop on the
@@ -666,7 +664,7 @@ module Pronto_espresso = struct
       in
 
       let () = fetch_req <== R.reg ~rv:vdd ~cv:vdd ~e:vdd 
-        (L.pmux (List.map (fun a -> a,gnd) [
+        (pmux (List.map (fun a -> a,gnd) [
           (* Deassert on ack *)
           fetch_req &: i.stepping &: new_insn_ready;
           (~: fetch_req) &: i.du_stall;
@@ -688,7 +686,7 @@ module Pronto_espresso = struct
       in
 
       let took_early_pc_onto_cache_hit = R.reg_fb ~e:vdd ~w:1 
-        (L.pmux [
+        (pmux [
           i.padv, took_early_calc_pc &: mini_cache.Mc_o.hit &: 
                   (~: (i.fetch_take_exception_branch));
           i.ctrl_insn_done, gnd;
@@ -703,21 +701,21 @@ module Pronto_espresso = struct
             control stage, so we must wait until the next instruction is ready
             before it will be completed by the control stage *)
       let () = waited_with_early_pc_onto_cache_hit <== R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           took_branch_r |: i.padv, took_early_pc_onto_cache_hit &: (~: fetch_ready);
           i.ctrl_insn_done, gnd
         ])
       in
 
       let () = jump_insn_in_decode <== R.reg ~e:vdd 
-        (L.pmux [
+        (pmux [
           sleep, gnd;
           ((~: jump_insn_in_decode) &: next_insn_will_branch#q &: new_insn_ready &: i.padv), vdd;
         ] gnd)
       in
 
       let () = took_early_calc_pc <== R.reg ~e:vdd
-        (L.pmux [
+        (pmux [
           sleep, gnd;
           (next_insn_will_branch#q &: have_early_pc_next#q &: i.padv), vdd;
         ] gnd)
@@ -727,7 +725,7 @@ module Pronto_espresso = struct
        if we've already issued an instruction request and padv_i
        goes low. *)
       let complete_current_req = R.reg_fb ~e:vdd ~w:1
-        (fun complete_current_req -> L.pmux [
+        (fun complete_current_req -> pmux [
           fetch_req &: padv_deasserted &: (~: new_insn_ready), vdd;
           new_insn_ready &: complete_current_req, gnd;
         ] complete_current_req)
@@ -761,14 +759,14 @@ module Pronto_espresso = struct
       let fetched_pc = fetched_pc#q in
 
       (* Register file control *)
-      let rf_sel s = mux2 new_insn_ready (L.sel new_insn s) (zero M.o.rf_addr_width) in
+      let rf_sel s = mux2 new_insn_ready (sel new_insn s) (zero M.o.rf_addr_width) in
       let fetch_rfa_adr = rf_sel Defines.ra_select in
       let fetch_rfb_adr = rf_sel Defines.rb_select in
       let fetch_rf_re = new_insn_ready &: (i.padv |: i.stepping) &:
                         (~: (no_rf_read#q |: hold_decode_output)) in
 
       let decode_except_ibus_err = R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           (i.padv |: i.fetch_take_exception_branch) &: i.branch_occur |: i.du_stall, gnd;
           fetch_req, i.ibus_err;
         ])
@@ -828,7 +826,6 @@ module Espresso = struct
   ***************************************************************************** *)
 
   module Make(M : Utils.Module_cfg_signal) = struct
-    module L = Utils.Logic(M.Bits)
     open M.Bits
 
     module I = interface 
@@ -918,14 +915,14 @@ module Espresso = struct
       let awkward_transition_to_branch_target = branch_occur_re &: bus_access_done_fe in
    
       let wait_for_exception_after_ibus_err  = R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           i.fetch_take_exception_branch, gnd;
           i.ibus_err, vdd;
         ])
       in
 
       let jal_buffered =
-        let opcode = L.sel insn_buffer Defines.Opcode.select in
+        let opcode = sel insn_buffer Defines.Opcode.select in
         (opcode ==:. Defines.Opcode.jalr) |:
         (opcode ==:. Defines.Opcode.jal) 
       in
@@ -949,7 +946,7 @@ module Espresso = struct
       in
    
       let fetch_req = R.reg_fb ~rv:vdd ~cv:vdd ~e:vdd ~w:1 
-        (fun fetch_req -> L.pmux [
+        (fun fetch_req -> pmux [
           i.fetch_take_exception_branch |: i.du_restart, vdd;
             (* Force de-assert of req signal when branching.
               This is to stop (ironically) the case where we've got the
@@ -971,7 +968,7 @@ module Espresso = struct
 
       (* If insn_buffer contains the next insn we need, save that information here *)
       let () = next_insn_buffered <== R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           i.fetch_take_exception_branch, gnd;
           (* Next instruction is usually buffered when we've got bus ack and
             pipeline advance, except when we're branching (usually throw
@@ -998,7 +995,7 @@ module Espresso = struct
       let ibus_burst = gnd in
 
       let decode_insn = R.reg_fb ~rv:nop ~cv:nop ~e:vdd ~w:Defines.insn_width
-        (L.pmux [
+        (pmux [
           (* Put a NOP in the pipeline when starting exception - remove any state
              which may be causing the exception *)
           (i.fetch_take_exception_branch |: (i.du_stall &: (~: (i.execute_waiting)))),
@@ -1018,11 +1015,11 @@ module Espresso = struct
       in
    
       (* Early RF address fetch *)
-      let fetch_rfa_adr = L.sel insn_buffer Defines.ra_select  in
-      let fetch_rfb_adr = L.sel insn_buffer Defines.rb_select  in
+      let fetch_rfa_adr = sel insn_buffer Defines.ra_select  in
+      let fetch_rfb_adr = sel insn_buffer Defines.rb_select  in
    
       let decode_except_ibus_err = R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           ((i.padv |: i.fetch_take_exception_branch) &: i.branch_occur |: i.du_stall), gnd;
           fetch_req, i.ibus_err;
         ])
@@ -1067,7 +1064,6 @@ module Cappuccino = struct
 
   ***************************************************************************** *)
   module Make(M : Utils.Module_cfg_signal) = struct
-    module L = Utils.Logic(M.Bits)
     open M.Bits
     
     module I = interface 
@@ -1178,14 +1174,14 @@ module Cappuccino = struct
       in
 
       let fetch_exception_taken = R.reg_fb ~e:vdd ~w:1
-        (fun fetch_exception_taken -> L.pmux [
+        (fun fetch_exception_taken -> pmux [
           fetch_exception_taken, gnd;
           (i.ctrl_branch_exception &: bus_access_done &: i.padv), vdd;
         ] gnd)
       in
 
       let flush = R.reg_fb ~e:vdd ~w:1 
-        (L.pmux [
+        (pmux [
           (bus_access_done &: i.padv |: i.du_restart), gnd;
           i.pipeline_flush, vdd;
         ])
@@ -1200,7 +1196,7 @@ module Cappuccino = struct
 
       (*  fetch_valid_o generation *)
       let () = fetch_valid <== R.reg ~e:vdd
-        (L.pmux [
+        (pmux [
           i.pipeline_flush, gnd;
           (bus_access_done &: i.padv &: (~: mispredict_stall) &: (~: (immu.Immu.O.busy)) &:
             (~: (immu.Immu.O.tlb_reload_busy)) |: stall_fetch_valid), vdd;
@@ -1218,7 +1214,7 @@ module Cappuccino = struct
       in
 
       let decode_except_ibus_err = R.reg_fb ~e:vdd ~w:1 
-        (fun decode_except_ibus_err -> (L.pmux [
+        (fun decode_except_ibus_err -> (pmux [
           i.du_restart, gnd;
           imem_err, vdd;
           (decode_except_ibus_err &: i.ctrl_branch_exception), gnd;
@@ -1226,7 +1222,7 @@ module Cappuccino = struct
       in
 
       let decode_except_itlb_miss  = R.reg_fb ~e:vdd ~w:1
-        (fun decode_except_itlb_miss -> (L.pmux [
+        (fun decode_except_itlb_miss -> (pmux [
           i.du_restart, gnd;
           immu.Immu.O.tlb_reload_busy, gnd;
           except_itlb_miss, vdd;
@@ -1235,7 +1231,7 @@ module Cappuccino = struct
       in
 
       let decode_except_ipagefault = R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           i.du_restart, gnd;
           except_ipagefault, vdd;
           except_ipagefault_clear, gnd;
@@ -1255,7 +1251,7 @@ module Cappuccino = struct
 
       (* Branch misprediction stall logic *)
       let fetching_brcond = R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           i.pipeline_flush, gnd;
           (i.decode_op_brcond &: addr_valid), vdd;
           (bus_access_done &: i.padv |: i.du_restart), gnd;
@@ -1263,7 +1259,7 @@ module Cappuccino = struct
       in
 
       let fetching_mispredicted_branch = R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           i.pipeline_flush, gnd;
           (bus_access_done &: i.padv |: i.du_restart), gnd;
           (fetching_brcond &: i.branch_mispredict &: i.padv), vdd;
@@ -1280,7 +1276,7 @@ module Cappuccino = struct
       in
 
       let ic_enable_r = R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           (i.ic_enable &: (~: (ibus_req#q))), vdd;
           ((~: (i.ic_enable)) &: (~: (ic.Ic.O.refill))), gnd;
         ])
@@ -1288,7 +1284,7 @@ module Cappuccino = struct
       let ic_enabled = i.ic_enable &: ic_enable_r in
 
       let pc_addr = R.reg ~rv:reset_pc ~cv:reset_pc ~e:vdd
-        (L.pmux [
+        (pmux [
           i.du_restart, i.du_restart_pc;
           i.ctrl_branch_exception &: (~: fetch_exception_taken), i.ctrl_branch_except_pc;
           i.branch_mispredict |: fetching_mispredicted_branch, i.execute_mispredict_target;
@@ -1388,8 +1384,8 @@ module Cappuccino = struct
         ]
       ] in
 
-      let fetch_rfa_adr = L.sel imem_dat Defines.ra_select in
-      let fetch_rfb_adr = L.sel imem_dat Defines.rb_select in
+      let fetch_rfa_adr = sel imem_dat Defines.ra_select in
+      let fetch_rfb_adr = sel imem_dat Defines.rb_select in
       let fetch_rf_adr_valid = bus_access_done &: i.padv in
  
       let ic_refill_allowed = 
@@ -1489,7 +1485,7 @@ module Cappuccino = struct
       let ibus_burst = (~: ibus_access) &: ic.Ic.O.refill &: (~: (ic.Ic.O.refill_done)) in
       let decode_insn = R.reg_fb
         ~rv:nop ~cv:nop ~e:vdd ~w:Defines.insn_width
-        (L.pmux [
+        (pmux [
           (imem_err |: flushing), nop;
           (bus_access_done &: i.padv &: (~: mispredict_stall)), imem_dat;
         ])

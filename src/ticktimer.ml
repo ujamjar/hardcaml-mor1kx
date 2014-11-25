@@ -16,8 +16,6 @@
 module Make(M : Utils.Module_cfg_signal) = struct
 
   open M.Bits
-  module L = Utils.Logic(M.Bits)
-  open L
 
   module I = interface
     clk[1] rst[1]

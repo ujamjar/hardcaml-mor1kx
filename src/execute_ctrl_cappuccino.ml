@@ -19,7 +19,6 @@ open Option
 
 module Make(M : Utils.Module_cfg_signal) = struct
     
-  module L = Utils.Logic(M.Bits)
   open M.Bits
 
   module I = interface
@@ -115,7 +114,7 @@ module Make(M : Utils.Module_cfg_signal) = struct
 
     let reset_pc = consti M.o.operand_width M.o.reset_pc in
 
-    let r x = R.reg_fb ~e:vdd ~w:1 (L.pmux [ i.pipeline_flush, gnd; i.padv, x ]) in
+    let r x = R.reg_fb ~e:vdd ~w:1 (pmux [ i.pipeline_flush, gnd; i.padv, x ]) in
     let ctrl_except_ibus_err = r i.execute_except_ibus_err in
     let ctrl_except_itlb_miss = r i.execute_except_itlb_miss in
     let ctrl_except_ipagefault = r i.execute_except_ipagefault in
@@ -154,18 +153,18 @@ module Make(M : Utils.Module_cfg_signal) = struct
        instruction coming in from execute stage. *)
     let ctrl_op_mul = 
       if M.f.multiplier = Multiplier_pipelined then
-        R.reg_fb ~e:vdd ~w:1 (L.pmux [ i.padv, i.op_mul; i.pipeline_flush, gnd; ])
+        R.reg_fb ~e:vdd ~w:1 (pmux [ i.padv, i.op_mul; i.pipeline_flush, gnd; ])
       else
         gnd
     in
 
-    let r x = R.reg_fb ~e:vdd ~w:1 (L.pmux [ i.padv, x; i.pipeline_flush, gnd ]) in
+    let r x = R.reg_fb ~e:vdd ~w:1 (pmux [ i.padv, x; i.pipeline_flush, gnd ]) in
     let ctrl_op_mfspr = r i.op_mfspr in
     let ctrl_op_mtspr = r i.op_mtspr in
     let ctrl_op_rfe = r i.op_rfe in
 
     let r x = R.reg_fb ~e:vdd ~w:1
-      (L.pmux [
+      (pmux [
         (ctrl_except_align |: ctrl_except_dbus |:
           ctrl_except_dtlb_miss |: ctrl_except_dpagefault), gnd;
         i.padv, x;
@@ -180,7 +179,7 @@ module Make(M : Utils.Module_cfg_signal) = struct
     let ctrl_lsu_zext = R.reg ~e:i.padv i.lsu_zext in
 
     let ctrl_rf_wb = R.reg_fb ~e:vdd ~w:1
-      (L.pmux [
+      (pmux [
         i.padv, i.execute_rf_wb;
         (* Deassert the write enable when the "bus" access is done, to avoid:
           1) Writing multiple times to RF
@@ -196,7 +195,7 @@ module Make(M : Utils.Module_cfg_signal) = struct
     (* load and mfpsr can stall from ctrl stage, so we have to hold off the
        write back on them *)
     let wb_rf_wb = R.reg ~e:vdd
-      (L.pmux [
+      (pmux [
         i.pipeline_flush, gnd;
         ctrl_op_mfspr, ctrl_rf_wb &: i.ctrl_mfspr_ack;
         ctrl_op_lsu_load, ctrl_rf_wb &: i.lsu_valid;

@@ -33,8 +33,6 @@ module Espresso = struct
     open M.Bits
     open Option
     open Utils
-    module L = Utils.Logic(M.Bits)
-    open L
     module Spr = Spr.Make(M.Bits)
 
     module I = interface
@@ -299,7 +297,7 @@ module Espresso = struct
       in
 
       (*let waiting_for_except_fetch = R.reg_fb ~e:vdd ~w:1
-        (fun waiting_for_except_fetch -> L.pmux [
+        (fun waiting_for_except_fetch -> pmux [
           waiting_for_except_fetch &: i.next_fetch_done, gnd;
           fetch_take_exception_branch, vdd;
         ] waiting_for_except_fetch)
@@ -363,7 +361,7 @@ module Espresso = struct
       (*let decode_execute_halt = R.reg_fb ~e:vdd ~w:1
         (fun decode_execute_halt -> 
           let deassert_decode_execute_halt = ctrl_branch_occur &: decode_execute_halt in
-          L.pmux [
+          pmux [
             du.Du.O.du_restart_from_stall, gnd;
             decode_execute_halt &: deassert_decode_execute_halt, gnd;
             ((op_rfe |: exn) &: (~: decode_execute_halt) &: (~: exception_taken)), gnd;
@@ -371,14 +369,14 @@ module Espresso = struct
       in*)
 
       let () = exception_r <== R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           (exception_taken |: du.Du.O.du_restart_from_stall), gnd;
           (exn &: (~: exception_r)), vdd;
         ])
       in
       
       let () = exception_taken <== R.reg_fb ~e:vdd ~w:1
-        (fun exception_taken -> L.pmux [
+        (fun exception_taken -> pmux [
           exception_taken, gnd;
           exception_r &: take_exception, vdd;
         ] exception_taken)
@@ -390,14 +388,14 @@ module Espresso = struct
       in
 
       let () = waiting_for_fetch <== R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           i.next_fetch_done, gnd;
           ((~: execute_waiting) &: execute_waiting_r &: (~: (i.next_fetch_done))), vdd;
         ])
       in
 
       let branched_and_waiting_for_fetch = R.reg_fb ~e:vdd ~w:1
-        (fun branched_and_waiting_for_fetch -> L.pmux [
+        (fun branched_and_waiting_for_fetch -> pmux [
           exception_re, gnd;
           (padv_fetch &: ctrl_branch_occur_o), vdd;
           branched_and_waiting_for_fetch, ~: (i.next_fetch_done);
@@ -412,7 +410,7 @@ module Espresso = struct
       in
 
       let () = doing_rfe_r <== R.reg_fb ~e:vdd ~w:1
-        (L.pmux [
+        (pmux [
           deassert_doing_rfe, gnd;
           execute_done, op_rfe;
         ])

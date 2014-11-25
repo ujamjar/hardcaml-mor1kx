@@ -20,7 +20,7 @@ end
 
 let test_sm i =
   let open I in
-  let state_is, statemachine, next = Utils.statemachine
+  let state_is, statemachine, next = HardCaml.Signal.Statemachine.statemachine
     ~encoding:`onehot
     { r_sync with 
       reg_clock=i.clk;

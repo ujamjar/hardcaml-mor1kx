@@ -76,10 +76,10 @@ module True_dp(S : S)(M : Utils.Module_cfg_signal) = struct
     let size = 1 lsl S.addr_width in
     let dout = 
       R.multi_ram_wbr size
-        ~wr:Utils.Multiram.(
+        ~wr:HardCaml.Signal.Multiram.(
           [| { we = i.we_a; wa = i.addr_a; wd = i.din_a; };
             { we = i.we_b; wa = i.addr_b; wd = i.din_b; }; |])
-        ~rd:Utils.Multiram.(
+        ~rd:HardCaml.Signal.Multiram.(
           [| { re = ~: (i.we_a); ra = i.addr_a; };
             { re = ~: (i.we_b); ra = i.addr_b; }; |])
     in

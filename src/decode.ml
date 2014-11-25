@@ -27,8 +27,6 @@ module Make(M : Utils.Module_cfg) = struct
   open Utils
   open Option
   open M.Bits
-  module L = Utils.Logic(M.Bits)
-  open L
 
   let rf_addr_width = M.o.rf_addr_width
   let operand_width = M.o.operand_width

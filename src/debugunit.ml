@@ -19,8 +19,6 @@ module Espresso = struct
     open M.Bits
     open Option
     open Utils
-    module L = Utils.Logic(M.Bits)
-    open L
     module Spr = Spr.Make(M.Bits)
 
     module I = interface

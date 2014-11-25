@@ -22,7 +22,6 @@ open Option
 
 module Make(M : Utils.Module_cfg_signal) = struct
     
-  module L = Utils.Logic(M.Bits)
   open M.Bits
 
   module I = interface
@@ -181,7 +180,7 @@ module Make(M : Utils.Module_cfg_signal) = struct
     let execute_op_brcond = r i.decode_op_brcond in
     let execute_op_branch = r i.decode_op_branch in
 
-    let r x = R.reg_fb ~e:vdd ~w:1 (L.pmux [ i.pipeline_flush, gnd; i.padv, x ]) in
+    let r x = R.reg_fb ~e:vdd ~w:1 (pmux [ i.pipeline_flush, gnd; i.padv, x ]) in
     (* rfe is a special case, instead of pushing the pipeline full
        of nops on a decode_bubble_o, we push it full of rfes.
        The reason for this is that we need the rfe to reach control
@@ -339,7 +338,7 @@ module Make(M : Utils.Module_cfg_signal) = struct
     in
     
     let () = execute_bubble <== R.reg_fb ~e:vdd ~w:1 
-      (L.pmux [ i.pipeline_flush, gnd; i.padv, decode_bubble ]) 
+      (pmux [ i.pipeline_flush, gnd; i.padv, decode_bubble ]) 
     in
 
     O.{
